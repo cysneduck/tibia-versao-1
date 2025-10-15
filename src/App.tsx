@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Planilhados from "./pages/Planilhados";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -55,6 +56,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/planilhados"
+            element={
+              <ProtectedRoute>
+                <Planilhados />
               </ProtectedRoute>
             }
           />

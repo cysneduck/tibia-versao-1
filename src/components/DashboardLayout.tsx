@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Header } from "./Header";
 import { Link, useLocation } from "react-router-dom";
-import { Home, List, Settings, User } from "lucide-react";
+import { Home, FileSpreadsheet, Settings, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -17,7 +17,8 @@ export const DashboardLayout = ({ children, isAdmin = false }: DashboardLayoutPr
   const { profile, characters } = useProfile(user?.id);
 
   const navItems = [
-    { icon: Home, label: "Dashboard", path: "/dashboard" },
+    { icon: Home, label: "Respawns", path: "/dashboard" },
+    { icon: FileSpreadsheet, label: "Planilhados", path: "/planilhados" },
     { icon: User, label: "Profile", path: "/profile" },
     ...(isAdmin ? [{ icon: Settings, label: "Admin", path: "/admin" }] : []),
   ];

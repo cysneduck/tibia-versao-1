@@ -88,7 +88,7 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Available Respawns</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Respawns</h1>
           <p className="text-muted-foreground">Manage and track respawn claims</p>
         </div>
 
