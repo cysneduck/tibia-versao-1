@@ -14,17 +14,13 @@ export const DashboardLayout = ({ children, isAdmin = false }: DashboardLayoutPr
 
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },
-    { icon: List, label: "My Claims", path: "/my-claims" },
     { icon: User, label: "Profile", path: "/profile" },
+    ...(isAdmin ? [{ icon: Settings, label: "Admin", path: "/admin" }] : []),
   ];
-
-  if (isAdmin) {
-    navItems.push({ icon: Settings, label: "Guild Settings", path: "/guild-settings" });
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header isLoggedIn username="Knight Hunter" userType="guild" />
+      <Header isLoggedIn username="Dark Knight" userType="guild" />
       
       <nav className="border-b border-border bg-card/30 backdrop-blur-sm sticky top-[73px] z-40">
         <div className="container mx-auto px-4">

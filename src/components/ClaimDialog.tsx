@@ -13,6 +13,7 @@ interface ClaimDialogProps {
   onOpenChange: (open: boolean) => void;
   respawnCode: string;
   respawnName: string;
+  characterName: string;
   duration: string;
   onConfirm: () => void;
 }
@@ -22,6 +23,7 @@ export const ClaimDialog = ({
   onOpenChange,
   respawnCode,
   respawnName,
+  characterName,
   duration,
   onConfirm,
 }: ClaimDialogProps) => {
@@ -31,7 +33,7 @@ export const ClaimDialog = ({
         <DialogHeader>
           <DialogTitle>Claim Respawn</DialogTitle>
           <DialogDescription>
-            Are you sure you want to claim this respawn?
+            Confirm claiming this respawn with your character
           </DialogDescription>
         </DialogHeader>
         
@@ -42,6 +44,11 @@ export const ClaimDialog = ({
               {respawnCode} - {respawnName}
             </p>
           </div>
+
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Character</p>
+            <p className="font-medium text-foreground">{characterName}</p>
+          </div>
           
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Duration</p>
@@ -50,7 +57,7 @@ export const ClaimDialog = ({
           
           <div className="rounded-lg bg-primary/10 border border-primary/20 p-3">
             <p className="text-sm text-foreground">
-              This respawn will be marked as claimed by you and other members will see it's unavailable.
+              This respawn will be marked as claimed by {characterName} and other members will see it's unavailable.
             </p>
           </div>
         </div>

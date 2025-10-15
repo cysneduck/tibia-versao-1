@@ -29,7 +29,7 @@ export default function Login() {
       <Card className="border-border bg-card/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Enter your credentials to access your guild</CardDescription>
+          <CardDescription>Invitation-only access to Resonance Remain</CardDescription>
         </CardHeader>
         
         <form onSubmit={handleLogin}>
@@ -65,17 +65,10 @@ export default function Login() {
             </div>
           </CardContent>
           
-          <CardFooter className="flex flex-col gap-4">
+          <CardFooter>
             <Button type="submit" className="w-full">
               Login
             </Button>
-            
-            <p className="text-sm text-center text-muted-foreground">
-              Don't have access?{" "}
-              <Link to="/signup" className="text-primary hover:underline">
-                Create account
-              </Link>
-            </p>
           </CardFooter>
         </form>
       </Card>

@@ -8,6 +8,7 @@ interface RespawnCardProps {
   name: string;
   isClaimed?: boolean;
   claimedBy?: string;
+  characterName?: string;
   timeRemaining?: string;
   userType?: "guild" | "neutro";
 }
@@ -16,7 +17,8 @@ export const RespawnCard = ({
   code, 
   name, 
   isClaimed = false, 
-  claimedBy, 
+  claimedBy,
+  characterName,
   timeRemaining,
   userType 
 }: RespawnCardProps) => {
@@ -52,7 +54,7 @@ export const RespawnCard = ({
           <>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <User className="h-4 w-4" />
-              <span>Claimed by: <span className="text-foreground font-medium">{claimedBy}</span></span>
+              <span>Claimed by: <span className="text-foreground font-medium">{characterName || claimedBy}</span></span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4 text-secondary" />

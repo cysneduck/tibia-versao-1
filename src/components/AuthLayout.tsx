@@ -10,9 +10,9 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-primary glow-cyan tracking-wider mb-2">
-            Tibia Claim
+            Resonance Remain
           </h1>
-          <p className="text-sm text-muted-foreground">Guild respawn management system</p>
+          <p className="text-sm text-muted-foreground">Professional respawn coordination platform</p>
         </div>
         {children}
       </div>
