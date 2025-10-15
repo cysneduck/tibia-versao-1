@@ -57,26 +57,24 @@ All colors MUST be HSL.
 
 @layer utilities {
   .glow-cyan {
-    text-shadow: 0 0 10px hsl(var(--glow-cyan) / 0.8),
-                 0 0 20px hsl(var(--glow-cyan) / 0.6),
-                 0 0 30px hsl(var(--glow-cyan) / 0.4);
+    text-shadow: 0 0 8px hsl(var(--glow-cyan) / 0.3),
+                 0 0 12px hsl(var(--glow-cyan) / 0.2);
   }
   
   .glow-red {
-    text-shadow: 0 0 10px hsl(var(--glow-red) / 0.8),
-                 0 0 20px hsl(var(--glow-red) / 0.6),
-                 0 0 30px hsl(var(--glow-red) / 0.4);
+    text-shadow: 0 0 8px hsl(var(--glow-red) / 0.3),
+                 0 0 12px hsl(var(--glow-red) / 0.2);
   }
   
   .border-glow-cyan {
-    border-color: hsl(var(--glow-cyan) / 0.5);
-    box-shadow: 0 0 10px hsl(var(--glow-cyan) / 0.3),
-                inset 0 0 10px hsl(var(--glow-cyan) / 0.1);
+    border-color: hsl(var(--glow-cyan) / 0.3);
+    box-shadow: 0 0 6px hsl(var(--glow-cyan) / 0.15),
+                inset 0 0 6px hsl(var(--glow-cyan) / 0.05);
   }
   
   .border-glow-red {
-    border-color: hsl(var(--glow-red) / 0.5);
-    box-shadow: 0 0 10px hsl(var(--glow-red) / 0.3),
-                inset 0 0 10px hsl(var(--glow-red) / 0.1);
+    border-color: hsl(var(--glow-red) / 0.3);
+    box-shadow: 0 0 6px hsl(var(--glow-red) / 0.15),
+                inset 0 0 6px hsl(var(--glow-red) / 0.05);
   }
 }
