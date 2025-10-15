@@ -14,16 +14,229 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      characters: {
+        Row: {
+          created_at: string | null
+          id: string
+          level: number | null
+          name: string
+          updated_at: string | null
+          user_id: string
+          vocation: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          level?: number | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+          vocation?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          level?: number | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+          vocation?: string | null
+        }
+        Relationships: []
+      }
+      claims: {
+        Row: {
+          character_id: string
+          character_name: string
+          claimed_at: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          released_at: string | null
+          respawn_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          character_name: string
+          claimed_at?: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          released_at?: string | null
+          respawn_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          character_name?: string
+          claimed_at?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          released_at?: string | null
+          respawn_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claims_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_respawn_id_fkey"
+            columns: ["respawn_id"]
+            isOneToOne: false
+            referencedRelation: "respawns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          active_character_id: string | null
+          claim_reminders: boolean | null
+          created_at: string | null
+          email: string
+          email_notifications: boolean | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active_character_id?: string | null
+          claim_reminders?: boolean | null
+          created_at?: string | null
+          email: string
+          email_notifications?: boolean | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active_character_id?: string | null
+          claim_reminders?: boolean | null
+          created_at?: string | null
+          email?: string
+          email_notifications?: boolean | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_active_character"
+            columns: ["active_character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      respawns: {
+        Row: {
+          city: string
+          code: string
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          city: string
+          code: string
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string
+          code?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          setting_key: string
+          setting_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          setting_key: string
+          setting_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_respawn: {
+        Args: { p_character_id: string; p_respawn_id: string }
+        Returns: Json
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      release_claim: {
+        Args: { p_claim_id: string }
+        Returns: Json
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "guild" | "neutro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +363,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "guild", "neutro"],
+    },
   },
 } as const
