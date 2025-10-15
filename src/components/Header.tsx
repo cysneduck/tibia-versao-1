@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
@@ -9,6 +10,8 @@ interface HeaderProps {
 }
 
 export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) => {
+  const navigate = useNavigate();
+  
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -35,7 +38,12 @@ export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) 
                   {userType === "guild" ? "Guild Member" : "Neutro"}
                 </Badge>
               </div>
-              <Button variant="outline" size="icon" className="border-border hover:border-primary">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="border-border hover:border-primary"
+                onClick={() => navigate('/profile')}
+              >
                 <User className="h-5 w-5" />
               </Button>
             </div>
