@@ -1,0 +1,62 @@
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search } from "lucide-react";
+
+interface FilterBarProps {
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  selectedCity: string;
+  onCityChange: (value: string) => void;
+  selectedStatus: string;
+  onStatusChange: (value: string) => void;
+  cities: string[];
+}
+
+export const FilterBar = ({
+  searchQuery,
+  onSearchChange,
+  selectedCity,
+  onCityChange,
+  selectedStatus,
+  onStatusChange,
+  cities,
+}: FilterBarProps) => {
+  return (
+    <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search respawns by code or name..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+      
+      <Select value={selectedCity} onValueChange={onCityChange}>
+        <SelectTrigger className="w-full md:w-[200px]">
+          <SelectValue placeholder="Filter by city" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Cities</SelectItem>
+          {cities.map((city) => (
+            <SelectItem key={city} value={city}>
+              {city}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={selectedStatus} onValueChange={onStatusChange}>
+        <SelectTrigger className="w-full md:w-[200px]">
+          <SelectValue placeholder="Filter by status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Status</SelectItem>
+          <SelectItem value="available">Available</SelectItem>
+          <SelectItem value="claimed">Claimed</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};

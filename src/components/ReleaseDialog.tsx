@@ -1,0 +1,62 @@
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
+interface ReleaseDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  respawnCode: string;
+  respawnName: string;
+  onConfirm: () => void;
+}
+
+export const ReleaseDialog = ({
+  open,
+  onOpenChange,
+  respawnCode,
+  respawnName,
+  onConfirm,
+}: ReleaseDialogProps) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Release Claim</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to release this respawn claim early?
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Respawn</p>
+            <p className="font-medium text-foreground">
+              {respawnCode} - {respawnName}
+            </p>
+          </div>
+          
+          <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+            <p className="text-sm text-foreground">
+              This will make the respawn available for other members to claim immediately.
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            Release Claim
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
