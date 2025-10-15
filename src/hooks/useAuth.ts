@@ -42,10 +42,13 @@ export const useAuth = () => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      setUserRole(data.role as UserRole);
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user role:', error);
+      }
+      // If no role found, default to neutro
+      setUserRole((data?.role as UserRole) || 'neutro');
     } catch (error) {
       console.error('Error fetching user role:', error);
       setUserRole('neutro'); // Default to neutro on error

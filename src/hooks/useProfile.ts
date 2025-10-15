@@ -14,8 +14,8 @@ export const useProfile = (userId: string | undefined) => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
-      if (error) throw error;
+        .maybeSingle();
+      if (error && error.code !== 'PGRST116') throw error;
       return data;
     },
     enabled: !!userId,

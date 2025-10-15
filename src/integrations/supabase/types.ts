@@ -223,6 +223,10 @@ export type Database = {
         Args: { p_character_id: string; p_respawn_id: string }
         Returns: Json
       }
+      ensure_user_data: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
