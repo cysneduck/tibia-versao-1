@@ -14,63 +14,45 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
-import { Users, MapPin, TrendingUp, MoreVertical, UserPlus } from "lucide-react";
-
-interface User {
-  id: string;
-  characters: string[];
-  email: string;
-  userType: "guild" | "neutro";
-  status: "active" | "inactive";
-}
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Users, MapPin, TrendingUp } from "lucide-react";
+import { useAdmin } from "@/hooks/useAdmin";
 
 export default function Admin() {
-  const [guildHours, setGuildHours] = useState("2");
-  const [guildMinutes, setGuildMinutes] = useState("15");
-  const [neutroHours, setNeutroHours] = useState("1");
-  const [neutroMinutes, setNeutroMinutes] = useState("15");
+  const { users, settings, stats, isLoading, updateUserRole, updateSystemSetting } = useAdmin();
 
-  const [users] = useState<User[]>([
-    { id: "1", characters: ["Dark Knight"], email: "dk@resonance.com", userType: "guild", status: "active" },
-    { id: "2", characters: ["Shadow Paladin", "Thunder Mage"], email: "sp@resonance.com", userType: "neutro", status: "active" },
-    { id: "3", characters: ["Mystic Sorcerer"], email: "ms@resonance.com", userType: "guild", status: "active" },
-    { id: "4", characters: ["Dragon Slayer"], email: "ds@resonance.com", userType: "guild", status: "inactive" },
-  ]);
-
-  // Mock statistics
-  const stats = {
-    totalUsers: users.length,
-    activeClaims: 4,
-    availableRespawns: 15,
-    guildMembers: users.filter(u => u.userType === "guild").length,
-    neutroUsers: users.filter(u => u.userType === "neutro").length,
-  };
+  const [guildHours, setGuildHours] = useState(settings?.guild_claim_hours || "2");
+  const [guildMinutes, setGuildMinutes] = useState(settings?.guild_claim_minutes || "15");
+  const [neutroHours, setNeutroHours] = useState(settings?.neutro_claim_hours || "1");
+  const [neutroMinutes, setNeutroMinutes] = useState(settings?.neutro_claim_minutes || "15");
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Claim duration settings updated successfully!");
+    
+    updateSystemSetting.mutate({ key: "guild_claim_hours", value: guildHours });
+    updateSystemSetting.mutate({ key: "guild_claim_minutes", value: guildMinutes });
+    updateSystemSetting.mutate({ key: "neutro_claim_hours", value: neutroHours });
+    updateSystemSetting.mutate({ key: "neutro_claim_minutes", value: neutroMinutes });
   };
 
-  const handleChangeUserType = (userId: string, newType: "guild" | "neutro") => {
-    const user = users.find(u => u.id === userId);
-    toast.success(`${user?.characters[0]}'s user type changed to ${newType === "guild" ? "Guild Member" : "Neutro"}`);
+  const handleChangeUserRole = (userId: string, newRole: string) => {
+    updateUserRole.mutate({ userId, newRole });
   };
 
-  const handleDeactivateUser = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    toast.success(`${user?.characters[0]} has been ${user?.status === "active" ? "deactivated" : "activated"}`);
-  };
-
-  const handleRemoveUser = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    toast.success(`${user?.characters[0]} has been removed from the system`);
-  };
+  if (isLoading) {
+    return (
+      <DashboardLayout isAdmin>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Loading admin panel...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout isAdmin>
@@ -81,7 +63,7 @@ export default function Admin() {
         </div>
 
         {/* Statistics Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="border-border bg-card/50">
             <CardHeader className="pb-3">
               <CardDescription className="flex items-center gap-2 text-muted-foreground">
@@ -90,7 +72,7 @@ export default function Admin() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-primary">{stats.totalUsers}</p>
+              <p className="text-3xl font-bold text-primary">{stats?.totalUsers || 0}</p>
             </CardContent>
           </Card>
 
@@ -102,7 +84,7 @@ export default function Admin() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-primary">{stats.activeClaims}</p>
+              <p className="text-3xl font-bold text-primary">{stats?.activeClaims || 0}</p>
             </CardContent>
           </Card>
 
@@ -110,33 +92,11 @@ export default function Admin() {
             <CardHeader className="pb-3">
               <CardDescription className="flex items-center gap-2 text-muted-foreground">
                 <TrendingUp className="h-4 w-4" />
-                Available
+                Total Respawns
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-primary">{stats.availableRespawns}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border bg-card/50">
-            <CardHeader className="pb-3">
-              <CardDescription className="text-muted-foreground">
-                Guild Members
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-primary">{stats.guildMembers}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border bg-card/50">
-            <CardHeader className="pb-3">
-              <CardDescription className="text-muted-foreground">
-                Neutro Users
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-secondary">{stats.neutroUsers}</p>
+              <p className="text-3xl font-bold text-primary">{stats?.totalRespawns || 0}</p>
             </CardContent>
           </Card>
         </div>
@@ -207,7 +167,9 @@ export default function Admin() {
                 </div>
               </div>
 
-              <Button type="submit">Save Settings</Button>
+              <Button type="submit" disabled={updateSystemSetting.isPending}>
+                Save Settings
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -215,88 +177,50 @@ export default function Admin() {
         {/* User Management */}
         <Card className="border-border bg-card/50">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage user accounts and permissions</CardDescription>
-              </div>
-              <Button className="gap-2">
-                <UserPlus className="h-4 w-4" />
-                Invite New User
-              </Button>
-            </div>
+            <CardTitle>User Management</CardTitle>
+            <CardDescription>Manage user accounts and permissions</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Character(s)</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Current Role</TableHead>
+                  <TableHead>Change Role</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {users?.map((user: any) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.characters.join(", ")}
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell className="font-medium">{user.email}</TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
                         className={
-                          user.userType === "guild"
+                          user.role === "admin"
+                            ? "border-purple-500 text-purple-500"
+                            : user.role === "guild"
                             ? "border-primary text-primary"
                             : "border-secondary text-secondary"
                         }
                       >
-                        {user.userType === "guild" ? "Guild" : "Neutro"}
+                        {user.role === "admin" ? "Admin" : user.role === "guild" ? "Guild" : "Neutro"}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={user.status === "active" ? "default" : "secondary"}
-                        className={
-                          user.status === "active"
-                            ? "bg-success/20 text-success border-success"
-                            : "bg-muted text-muted-foreground"
-                        }
+                      <Select
+                        value={user.role}
+                        onValueChange={(value) => handleChangeUserRole(user.id, value)}
                       >
-                        {user.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleChangeUserType(
-                                user.id,
-                                user.userType === "guild" ? "neutro" : "guild"
-                              )
-                            }
-                          >
-                            Change to {user.userType === "guild" ? "Neutro" : "Guild Member"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeactivateUser(user.id)}>
-                            {user.status === "active" ? "Deactivate" : "Activate"} User
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleRemoveUser(user.id)}
-                            className="text-destructive"
-                          >
-                            Remove User
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="guild">Guild</SelectItem>
+                          <SelectItem value="neutro">Neutro</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                   </TableRow>
                 ))}

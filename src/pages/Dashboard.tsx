@@ -3,68 +3,32 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { FilterBar } from "@/components/FilterBar";
 import { CitySection } from "@/components/CitySection";
 import { ClaimDialog } from "@/components/ClaimDialog";
-import { toast } from "sonner";
-
-// Mock data
-const mockRespawns = [
-  // Ankrahmun
-  { code: "B17", name: "Cobra Bastion", city: "Ankrahmun", isClaimed: true, claimedBy: "Dragon Slayer", characterName: "Dragon Slayer", timeRemaining: "2024-12-31T15:30:00" },
-  
-  // Carlin
-  { code: "C5", name: "Secret Library (Fire Area)", city: "Carlin", isClaimed: false },
-  { code: "C7", name: "Secret Library (Energy Area)", city: "Carlin", isClaimed: false },
-  
-  // Cormaya
-  { code: "X2", name: "Inqol -2", city: "Cormaya", isClaimed: true, claimedBy: "Dark Knight", characterName: "Dark Knight", timeRemaining: "2024-12-31T14:00:00" },
-  { code: "X3", name: "Inqol -3", city: "Cormaya", isClaimed: false },
-  
-  // Darashia
-  { code: "D19", name: "Ferumbra's Lair (Entrance)", city: "Darashia", isClaimed: false },
-  { code: "D20", name: "Ferumbra's Plague Seal - 2", city: "Darashia", isClaimed: false },
-  { code: "D21", name: "Ferumbra's Plague Seal - 1", city: "Darashia", isClaimed: true, claimedBy: "Shadow Paladin", characterName: "Shadow Paladin", timeRemaining: "2024-12-31T13:20:00" },
-  
-  // Edron
-  { code: "E29", name: "Falcon Bastion", city: "Edron", isClaimed: false },
-  
-  // Issavi
-  { code: "K12", name: "Ruins of Nuur (Blu)", city: "Issavi", isClaimed: false },
-  { code: "K13", name: "Salt Caves (Bashmu)", city: "Issavi", isClaimed: false },
-  
-  // Port Hope
-  { code: "P19", name: "True Asura -1", city: "Port Hope", isClaimed: true, claimedBy: "Mystic Sorcerer", characterName: "Mystic Sorcerer", timeRemaining: "2024-12-31T16:45:00" },
-  { code: "P20", name: "True Asura -2", city: "Port Hope", isClaimed: false },
-  
-  // Roshamuul
-  { code: "Q3", name: "Guzzlemaw Valley (East)", city: "Roshamuul", isClaimed: false },
-  { code: "Q4", name: "Guzzlemaw Valley (West)", city: "Roshamuul", isClaimed: false },
-  
-  // Venore
-  { code: "T13", name: "Flimsy -1", city: "Venore", isClaimed: false },
-  { code: "T14", name: "Flimsy -2", city: "Venore", isClaimed: false },
-  
-  // Warzone
-  { code: "U5", name: "Warzone 3", city: "Warzone", isClaimed: false },
-  { code: "U16", name: "Warzone 7 -1", city: "Warzone", isClaimed: false },
-  { code: "U17", name: "Warzone 7 -2", city: "Warzone", isClaimed: false },
-  { code: "U18", name: "Warzone 8", city: "Warzone", isClaimed: false },
-];
+import { useRespawns } from "@/hooks/useRespawns";
+import { useClaims } from "@/hooks/useClaims";
+import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Dashboard() {
+  const { user, userRole } = useAuth();
+  const { respawns, isLoading } = useRespawns();
+  const { claimRespawn } = useClaims(user?.id);
+  const { profile, characters } = useProfile(user?.id);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [claimDialogOpen, setClaimDialogOpen] = useState(false);
   const [selectedRespawn, setSelectedRespawn] = useState<any>(null);
 
-  const cities = Array.from(new Set(mockRespawns.map(r => r.city))).sort();
+  const cities = Array.from(new Set(respawns.map(r => r.city))).sort();
   
-  const filteredRespawns = mockRespawns.filter(respawn => {
+  const filteredRespawns = respawns.filter(respawn => {
     const matchesSearch = respawn.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          respawn.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCity = selectedCity === "all" || respawn.city === selectedCity;
     const matchesStatus = selectedStatus === "all" || 
-                         (selectedStatus === "available" && !respawn.isClaimed) ||
-                         (selectedStatus === "claimed" && respawn.isClaimed);
+                         (selectedStatus === "available" && !respawn.claim) ||
+                         (selectedStatus === "claimed" && respawn.claim);
     
     return matchesSearch && matchesCity && matchesStatus;
   });
@@ -75,21 +39,35 @@ export default function Dashboard() {
     }
     acc[respawn.city].push(respawn);
     return acc;
-  }, {} as Record<string, typeof mockRespawns>);
+  }, {} as Record<string, typeof respawns>);
 
-  // Active character for claiming
-  const activeCharacter = "Dark Knight";
+  const activeCharacter = characters?.find(c => c.id === profile?.active_character_id);
 
-  const handleClaimClick = (respawn: any) => {
-    setSelectedRespawn(respawn);
-    setClaimDialogOpen(true);
+  const handleConfirmClaim = async () => {
+    if (!activeCharacter || !selectedRespawn) return;
+    
+    claimRespawn.mutate(
+      { respawnId: selectedRespawn.id, characterId: activeCharacter.id },
+      {
+        onSuccess: () => {
+          setClaimDialogOpen(false);
+          setSelectedRespawn(null);
+        },
+      }
+    );
   };
 
-  const handleConfirmClaim = () => {
-    toast.success(`Successfully claimed ${selectedRespawn.code} - ${selectedRespawn.name}!`);
-    setClaimDialogOpen(false);
-    setSelectedRespawn(null);
-  };
+  const duration = userRole === 'guild' ? '2 hours 15 minutes' : '1 hour 15 minutes';
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Loading respawns...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -115,27 +93,42 @@ export default function Dashboard() {
               <p className="text-muted-foreground">No respawns found matching your filters.</p>
             </div>
           ) : (
-            Object.entries(groupedRespawns).map(([city, respawns]) => (
+            Object.entries(groupedRespawns).map(([city, cityRespawns]) => (
               <CitySection
                 key={city}
                 cityName={city}
-                respawns={respawns}
-                userType="guild"
+                respawns={cityRespawns.map(r => ({
+                  code: r.code,
+                  name: r.name,
+                  isClaimed: !!r.claim,
+                  claimedBy: r.claim?.character_name,
+                  characterName: r.claim?.character_name,
+                  timeRemaining: r.claim?.expires_at,
+                  respawnId: r.id,
+                  claimId: r.claim?.id,
+                  userId: r.claim?.user_id,
+                }))}
+                userType={userRole as 'guild' | 'neutro'}
+                onClaimClick={(respawn) => {
+                  setSelectedRespawn({ id: respawn.respawnId, ...respawn });
+                  setClaimDialogOpen(true);
+                }}
               />
             ))
           )}
         </div>
       </div>
 
-      {selectedRespawn && (
+      {selectedRespawn && activeCharacter && (
         <ClaimDialog
           open={claimDialogOpen}
           onOpenChange={setClaimDialogOpen}
           respawnCode={selectedRespawn.code}
           respawnName={selectedRespawn.name}
-          characterName={activeCharacter}
-          duration="2 hours 15 minutes"
+          characterName={activeCharacter.name}
+          duration={duration}
           onConfirm={handleConfirmClaim}
+          isLoading={claimRespawn.isPending}
         />
       )}
     </DashboardLayout>

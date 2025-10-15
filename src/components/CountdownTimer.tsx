@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Clock } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { format } from "date-fns";
 
 interface CountdownTimerProps {
   expiresAt: string;
@@ -8,7 +9,7 @@ interface CountdownTimerProps {
 
 export const CountdownTimer = ({ expiresAt, compact = false }: CountdownTimerProps) => {
   const [timeLeft, setTimeLeft] = useState("");
-  const [isExpiringSoon, setIsExpiringSoon] = useState(false);
+  const [urgencyLevel, setUrgencyLevel] = useState<"normal" | "warning" | "critical">("normal");
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -18,6 +19,7 @@ export const CountdownTimer = ({ expiresAt, compact = false }: CountdownTimerPro
 
       if (difference <= 0) {
         setTimeLeft("Expired");
+        setUrgencyLevel("critical");
         return;
       }
 
@@ -25,13 +27,21 @@ export const CountdownTimer = ({ expiresAt, compact = false }: CountdownTimerPro
       const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-      // Mark as expiring soon if less than 30 minutes
-      setIsExpiringSoon(difference < 30 * 60 * 1000);
+      // Set urgency level
+      if (difference < 15 * 60 * 1000) {
+        setUrgencyLevel("critical"); // Less than 15 minutes
+      } else if (difference < 30 * 60 * 1000) {
+        setUrgencyLevel("warning"); // Less than 30 minutes
+      } else {
+        setUrgencyLevel("normal");
+      }
 
       if (compact) {
         setTimeLeft(`${hours}h ${minutes}m`);
       } else {
-        setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+        // Show countdown with absolute time
+        const expiryDate = format(new Date(expiresAt), "MMM dd, HH:mm");
+        setTimeLeft(`${hours}h ${minutes}m ${seconds}s (${expiryDate})`);
       }
     };
 
@@ -41,9 +51,22 @@ export const CountdownTimer = ({ expiresAt, compact = false }: CountdownTimerPro
     return () => clearInterval(interval);
   }, [expiresAt, compact]);
 
+  const getColorClass = () => {
+    switch (urgencyLevel) {
+      case "critical":
+        return "text-destructive";
+      case "warning":
+        return "text-yellow-500";
+      default:
+        return "text-green-500";
+    }
+  };
+
+  const shouldPulse = urgencyLevel === "critical";
+
   return (
-    <div className={`flex items-center gap-2 ${isExpiringSoon ? 'text-destructive' : 'text-muted-foreground'}`}>
-      <Clock className="h-4 w-4" />
+    <div className={`flex items-center gap-2 ${getColorClass()}`}>
+      <AlertCircle className={`h-4 w-4 ${shouldPulse ? 'animate-pulse' : ''}`} />
       <span className={`text-sm font-mono ${compact ? '' : 'font-medium'}`}>
         {timeLeft}
       </span>

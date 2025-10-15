@@ -8,83 +8,77 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
 import { Star, Trash2, Plus } from "lucide-react";
-
-interface Character {
-  id: string;
-  name: string;
-  level: string;
-  vocation: string;
-  isActive: boolean;
-}
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 export default function Profile() {
-  const [email, setEmail] = useState("player@resonance.com");
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [claimReminders, setClaimReminders] = useState(true);
-  const [characters, setCharacters] = useState<Character[]>([
-    { id: "1", name: "Dark Knight", level: "500", vocation: "EK", isActive: true },
-    { id: "2", name: "Shadow Paladin", level: "450", vocation: "RP", isActive: false },
-  ]);
+  const { user, userRole } = useAuth();
+  const {
+    profile,
+    characters,
+    isLoading,
+    addCharacter,
+    updateCharacter,
+    deleteCharacter,
+    setActiveCharacter,
+    updateProfile,
+  } = useProfile(user?.id);
+
   const [newCharName, setNewCharName] = useState("");
   const [newCharLevel, setNewCharLevel] = useState("");
   const [newCharVocation, setNewCharVocation] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const userType = "guild"; // Mock user type
-
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("Profile updated successfully!");
-  };
-
-  const handleChangePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("Password changed successfully!");
+  const handleSaveNotifications = (field: "email_notifications" | "claim_reminders", value: boolean) => {
+    updateProfile.mutate({ [field]: value });
   };
 
   const handleSetActive = (characterId: string) => {
-    setCharacters(prev => 
-      prev.map(char => ({
-        ...char,
-        isActive: char.id === characterId
-      }))
-    );
-    const char = characters.find(c => c.id === characterId);
-    toast.success(`${char?.name} is now your active character`);
+    setActiveCharacter.mutate(characterId);
   };
 
   const handleRemoveCharacter = (characterId: string) => {
-    const char = characters.find(c => c.id === characterId);
-    if (char?.isActive && characters.length > 1) {
-      toast.error("Cannot remove active character. Set another character as active first.");
+    const char = characters?.find((c) => c.id === characterId);
+    if (char?.id === profile?.active_character_id && characters && characters.length > 1) {
+      // Cannot remove active character
       return;
     }
-    setCharacters(prev => prev.filter(c => c.id !== characterId));
-    toast.success("Character removed");
+    deleteCharacter.mutate(characterId);
   };
 
   const handleAddCharacter = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCharName.trim()) {
-      toast.error("Character name is required");
-      return;
-    }
-    const newChar: Character = {
-      id: Date.now().toString(),
-      name: newCharName,
-      level: newCharLevel,
-      vocation: newCharVocation,
-      isActive: characters.length === 0,
-    };
-    setCharacters(prev => [...prev, newChar]);
-    setNewCharName("");
-    setNewCharLevel("");
-    setNewCharVocation("");
-    setShowAddForm(false);
-    toast.success("Character added successfully!");
+    if (!newCharName.trim()) return;
+
+    addCharacter.mutate(
+      {
+        name: newCharName,
+        level: newCharLevel ? parseInt(newCharLevel) : undefined,
+        vocation: newCharVocation || undefined,
+      },
+      {
+        onSuccess: () => {
+          setNewCharName("");
+          setNewCharLevel("");
+          setNewCharVocation("");
+          setShowAddForm(false);
+        },
+      }
+    );
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const userTypeDuration = userRole === "guild" ? "2 hours 15 minutes" : "1 hour 15 minutes";
 
   return (
     <DashboardLayout>
@@ -98,24 +92,28 @@ export default function Profile() {
         <Card className="border-border bg-card/50">
           <CardHeader>
             <CardTitle>My Characters</CardTitle>
-            <CardDescription>Manage your Tibia characters. The active character will be used when claiming respawns.</CardDescription>
+            <CardDescription>
+              Manage your Tibia characters. The active character will be used when claiming respawns.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {characters.map((char) => (
+            {characters?.map((char) => (
               <div
                 key={char.id}
                 className={`p-4 rounded-lg border transition-all ${
-                  char.isActive
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border bg-card/30'
+                  char.id === profile?.active_character_id
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-card/30"
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      {char.isActive && <Star className="h-4 w-4 text-primary fill-primary" />}
+                      {char.id === profile?.active_character_id && (
+                        <Star className="h-4 w-4 text-primary fill-primary" />
+                      )}
                       <h4 className="font-semibold text-foreground">{char.name}</h4>
-                      {char.isActive && (
+                      {char.id === profile?.active_character_id && (
                         <Badge variant="outline" className="border-primary text-primary text-xs">
                           Active
                         </Badge>
@@ -130,7 +128,7 @@ export default function Profile() {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    {!char.isActive && (
+                    {char.id !== profile?.active_character_id && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -192,18 +190,16 @@ export default function Profile() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button type="submit" size="sm">Add Character</Button>
+                  <Button type="submit" size="sm" disabled={addCharacter.isPending}>
+                    Add Character
+                  </Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => setShowAddForm(false)}>
                     Cancel
                   </Button>
                 </div>
               </form>
             ) : (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowAddForm(true)}
-              >
+              <Button variant="outline" className="w-full" onClick={() => setShowAddForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Character
               </Button>
@@ -222,38 +218,27 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label>User Type</Label>
                 <div className="flex items-center gap-2">
-                  <Badge 
-                    variant="outline" 
-                    className={userType === "guild" ? "border-primary text-primary" : "border-secondary text-secondary"}
+                  <Badge
+                    variant="outline"
+                    className={
+                      userRole === "guild" ? "border-primary text-primary" : "border-secondary text-secondary"
+                    }
                   >
-                    {userType === "guild" ? "Guild Member" : "Neutro"}
+                    {userRole === "guild" ? "Guild Member" : userRole === "admin" ? "Admin" : "Neutro"}
                   </Badge>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Claim Duration</Label>
-                <p className="text-sm text-muted-foreground">
-                  {userType === "guild" ? "2 hours 15 minutes" : "1 hour 15 minutes"} per respawn
-                </p>
+                <p className="text-sm text-muted-foreground">{userTypeDuration} per respawn</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <p className="text-sm text-muted-foreground">{profile?.email}</p>
               </div>
             </div>
-
-            <Separator />
-
-            <form onSubmit={handleSaveProfile} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-
-              <Button type="submit">Save Changes</Button>
-            </form>
           </CardContent>
         </Card>
 
@@ -267,13 +252,11 @@ export default function Profile() {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <Label>Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">
-                  Receive updates about respawn activity
-                </p>
+                <p className="text-sm text-muted-foreground">Receive updates about respawn activity</p>
               </div>
               <Switch
-                checked={emailNotifications}
-                onCheckedChange={setEmailNotifications}
+                checked={profile?.email_notifications ?? true}
+                onCheckedChange={(value) => handleSaveNotifications("email_notifications", value)}
               />
             </div>
 
@@ -282,43 +265,13 @@ export default function Profile() {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <Label>Claim Reminders</Label>
-                <p className="text-sm text-muted-foreground">
-                  Get notified when your claims are about to expire
-                </p>
+                <p className="text-sm text-muted-foreground">Get notified when your claims are about to expire</p>
               </div>
               <Switch
-                checked={claimReminders}
-                onCheckedChange={setClaimReminders}
+                checked={profile?.claim_reminders ?? true}
+                onCheckedChange={(value) => handleSaveNotifications("claim_reminders", value)}
               />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Change Password */}
-        <Card className="border-border bg-card/50">
-          <CardHeader>
-            <CardTitle>Change Password</CardTitle>
-            <CardDescription>Update your account password</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <Input id="currentPassword" type="password" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input id="newPassword" type="password" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
-                <Input id="confirmNewPassword" type="password" />
-              </div>
-
-              <Button type="submit">Update Password</Button>
-            </form>
           </CardContent>
         </Card>
       </div>

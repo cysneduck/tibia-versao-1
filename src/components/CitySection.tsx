@@ -12,9 +12,10 @@ interface CitySectionProps {
   cityName: string;
   respawns: Respawn[];
   userType?: "guild" | "neutro";
+  onClaimClick?: (respawn: any) => void;
 }
 
-export const CitySection = ({ cityName, respawns, userType }: CitySectionProps) => {
+export const CitySection = ({ cityName, respawns, userType, onClaimClick }: CitySectionProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-primary glow-cyan tracking-wide border-b border-border pb-2">
@@ -30,6 +31,7 @@ export const CitySection = ({ cityName, respawns, userType }: CitySectionProps) 
             claimedBy={respawn.claimedBy}
             timeRemaining={respawn.timeRemaining}
             userType={userType}
+            onClaimClick={onClaimClick ? () => onClaimClick(respawn) : undefined}
           />
         ))}
       </div>
