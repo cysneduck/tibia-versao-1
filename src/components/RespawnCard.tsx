@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, User } from "lucide-react";
+import { User } from "lucide-react";
+import { CountdownTimer } from "./CountdownTimer";
 
 interface RespawnCardProps {
   code: string;
@@ -63,10 +64,7 @@ export const RespawnCard = ({
               <User className="h-4 w-4" />
               <span>Claimed by: <span className="text-foreground font-medium">{characterName || claimedBy}</span></span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-secondary" />
-              <span className="text-secondary glow-red font-medium">{timeRemaining}</span>
-            </div>
+            {timeRemaining && <CountdownTimer expiresAt={timeRemaining} />}
             {isOwnClaim && onReleaseClick && (
               <Button 
                 variant="destructive"
