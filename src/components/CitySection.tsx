@@ -45,6 +45,8 @@ export const CitySection = ({ cityName, respawns, userType, onClaimClick, onRele
             userInQueue={respawn.userInQueue}
             queuePosition={respawn.queuePosition}
             nextInQueue={respawn.nextInQueue}
+            queueEntries={respawn.queueEntries}
+            userId={userId}
           />
         ))}
       </div>

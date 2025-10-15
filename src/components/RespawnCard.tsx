@@ -1,8 +1,17 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Users, Bell } from "lucide-react";
+import { User, Users } from "lucide-react";
 import { CountdownTimer } from "./CountdownTimer";
+import { QueueModal } from "./QueueModal";
+
+interface QueueEntry {
+  id: string;
+  character_name: string;
+  user_id: string;
+  joined_at: string;
+}
 
 interface RespawnCardProps {
   code: string;
@@ -22,6 +31,8 @@ interface RespawnCardProps {
   nextInQueue?: string;
   onJoinQueue?: () => void;
   onLeaveQueue?: () => void;
+  queueEntries?: QueueEntry[];
+  userId?: string;
 }
 
 export const RespawnCard = ({ 
@@ -40,8 +51,11 @@ export const RespawnCard = ({
   queuePosition,
   nextInQueue,
   onJoinQueue,
-  onLeaveQueue
+  onLeaveQueue,
+  queueEntries = [],
+  userId
 }: RespawnCardProps) => {
+  const [queueModalOpen, setQueueModalOpen] = useState(false);
   return (
     <Card className={`transition-all duration-300 hover:scale-[1.02] ${
       isClaimed 
@@ -79,17 +93,13 @@ export const RespawnCard = ({
             {timeRemaining && <CountdownTimer expiresAt={timeRemaining} />}
             
             {queueCount > 0 && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground border border-border rounded-md p-2 bg-card/50">
+              <div 
+                className="flex items-center gap-2 text-sm text-muted-foreground border border-border rounded-md p-2 bg-card/50 cursor-pointer hover:bg-card/70 transition-colors"
+                onClick={() => setQueueModalOpen(true)}
+              >
                 <Users className="h-4 w-4" />
-                <span>{queueCount} {queueCount === 1 ? 'person' : 'people'} in queue</span>
+                <span>{queueCount} {queueCount === 1 ? 'person' : 'people'} in Next</span>
                 {nextInQueue && <span className="text-xs text-muted-foreground">Next: {nextInQueue}</span>}
-              </div>
-            )}
-            
-            {userInQueue && queuePosition && (
-              <div className="flex items-center gap-2 text-sm border border-primary rounded-md p-2 bg-primary/10">
-                <Bell className="h-4 w-4 text-primary" />
-                <span className="text-primary font-medium">You are #{queuePosition} in queue</span>
               </div>
             )}
             
@@ -109,7 +119,7 @@ export const RespawnCard = ({
                 className="w-full border-primary text-primary hover:bg-primary/10"
                 onClick={onJoinQueue}
               >
-                Join Queue
+                Next
               </Button>
             )}
             
@@ -119,7 +129,7 @@ export const RespawnCard = ({
                 className="w-full"
                 onClick={onLeaveQueue}
               >
-                Leave Queue
+                Leave Next
               </Button>
             )}
           </>
@@ -132,7 +142,10 @@ export const RespawnCard = ({
               Claim Respawn
             </Button>
             {queueCount > 0 && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground border border-border rounded-md p-2 bg-card/50">
+              <div 
+                className="flex items-center gap-2 text-sm text-muted-foreground border border-border rounded-md p-2 bg-card/50 cursor-pointer hover:bg-card/70 transition-colors"
+                onClick={() => setQueueModalOpen(true)}
+              >
                 <Users className="h-4 w-4" />
                 <span>{queueCount} {queueCount === 1 ? 'person' : 'people'} waiting</span>
               </div>
@@ -145,6 +158,15 @@ export const RespawnCard = ({
           </p>
         )}
       </CardContent>
+
+      <QueueModal
+        open={queueModalOpen}
+        onOpenChange={setQueueModalOpen}
+        respawnCode={code}
+        respawnName={name}
+        queueEntries={queueEntries}
+        currentUserId={userId}
+      />
     </Card>
   );
 };

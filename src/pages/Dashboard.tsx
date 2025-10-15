@@ -133,6 +133,7 @@ export default function Dashboard() {
                     userInQueue: !!userInQueue,
                     queuePosition,
                     nextInQueue: queueEntries[0]?.character_name,
+                    queueEntries: queueEntries,
                   };
                 })}
                 userType={userRole as 'guild' | 'neutro'}
