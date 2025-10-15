@@ -14,10 +14,12 @@ interface CitySectionProps {
   userType?: "guild" | "neutro";
   onClaimClick?: (respawn: any) => void;
   onReleaseClick?: (respawn: any) => void;
+  onJoinQueue?: (respawn: any) => void;
+  onLeaveQueue?: (respawn: any) => void;
   userId?: string;
 }
 
-export const CitySection = ({ cityName, respawns, userType, onClaimClick, onReleaseClick, userId }: CitySectionProps) => {
+export const CitySection = ({ cityName, respawns, userType, onClaimClick, onReleaseClick, onJoinQueue, onLeaveQueue, userId }: CitySectionProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-primary glow-cyan tracking-wide border-b border-border pb-2">
@@ -35,8 +37,14 @@ export const CitySection = ({ cityName, respawns, userType, onClaimClick, onRele
             userType={userType}
             onClaimClick={onClaimClick ? () => onClaimClick(respawn) : undefined}
             onReleaseClick={onReleaseClick ? () => onReleaseClick(respawn) : undefined}
+            onJoinQueue={onJoinQueue ? () => onJoinQueue(respawn) : undefined}
+            onLeaveQueue={onLeaveQueue ? () => onLeaveQueue(respawn) : undefined}
             claimId={respawn.claimId}
             isOwnClaim={respawn.claim?.user_id === userId}
+            queueCount={respawn.queueCount}
+            userInQueue={respawn.userInQueue}
+            queuePosition={respawn.queuePosition}
+            nextInQueue={respawn.nextInQueue}
           />
         ))}
       </div>

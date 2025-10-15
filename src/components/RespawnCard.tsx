@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User } from "lucide-react";
+import { User, Users, Bell } from "lucide-react";
 import { CountdownTimer } from "./CountdownTimer";
 
 interface RespawnCardProps {
@@ -16,6 +16,12 @@ interface RespawnCardProps {
   onReleaseClick?: () => void;
   claimId?: string;
   isOwnClaim?: boolean;
+  queueCount?: number;
+  userInQueue?: boolean;
+  queuePosition?: number | null;
+  nextInQueue?: string;
+  onJoinQueue?: () => void;
+  onLeaveQueue?: () => void;
 }
 
 export const RespawnCard = ({ 
@@ -28,7 +34,13 @@ export const RespawnCard = ({
   userType,
   onClaimClick,
   onReleaseClick,
-  isOwnClaim
+  isOwnClaim,
+  queueCount = 0,
+  userInQueue = false,
+  queuePosition,
+  nextInQueue,
+  onJoinQueue,
+  onLeaveQueue
 }: RespawnCardProps) => {
   return (
     <Card className={`transition-all duration-300 hover:scale-[1.02] ${
@@ -65,6 +77,22 @@ export const RespawnCard = ({
               <span>Claimed by: <span className="text-foreground font-medium">{characterName || claimedBy}</span></span>
             </div>
             {timeRemaining && <CountdownTimer expiresAt={timeRemaining} />}
+            
+            {queueCount > 0 && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground border border-border rounded-md p-2 bg-card/50">
+                <Users className="h-4 w-4" />
+                <span>{queueCount} {queueCount === 1 ? 'person' : 'people'} in queue</span>
+                {nextInQueue && <span className="text-xs text-muted-foreground">Next: {nextInQueue}</span>}
+              </div>
+            )}
+            
+            {userInQueue && queuePosition && (
+              <div className="flex items-center gap-2 text-sm border border-primary rounded-md p-2 bg-primary/10">
+                <Bell className="h-4 w-4 text-primary" />
+                <span className="text-primary font-medium">You are #{queuePosition} in queue</span>
+              </div>
+            )}
+            
             {isOwnClaim && onReleaseClick && (
               <Button 
                 variant="destructive"
@@ -74,14 +102,42 @@ export const RespawnCard = ({
                 Leave Respawn
               </Button>
             )}
+            
+            {!isOwnClaim && !userInQueue && onJoinQueue && (
+              <Button 
+                variant="outline"
+                className="w-full border-primary text-primary hover:bg-primary/10"
+                onClick={onJoinQueue}
+              >
+                Join Queue
+              </Button>
+            )}
+            
+            {userInQueue && onLeaveQueue && (
+              <Button 
+                variant="outline"
+                className="w-full"
+                onClick={onLeaveQueue}
+              >
+                Leave Queue
+              </Button>
+            )}
           </>
         ) : (
-          <Button 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground glow-cyan font-semibold"
-            onClick={onClaimClick}
-          >
-            Claim Respawn
-          </Button>
+          <>
+            <Button 
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground glow-cyan font-semibold"
+              onClick={onClaimClick}
+            >
+              Claim Respawn
+            </Button>
+            {queueCount > 0 && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground border border-border rounded-md p-2 bg-card/50">
+                <Users className="h-4 w-4" />
+                <span>{queueCount} {queueCount === 1 ? 'person' : 'people'} waiting</span>
+              </div>
+            )}
+          </>
         )}
         {!isClaimed && userType && (
           <p className="text-xs text-muted-foreground text-center">

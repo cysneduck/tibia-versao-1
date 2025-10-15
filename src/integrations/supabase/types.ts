@@ -139,6 +139,57 @@ export type Database = {
           },
         ]
       }
+      respawn_queue: {
+        Row: {
+          character_id: string
+          character_name: string
+          created_at: string | null
+          id: string
+          joined_at: string
+          notified: boolean | null
+          respawn_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          character_name: string
+          created_at?: string | null
+          id?: string
+          joined_at?: string
+          notified?: boolean | null
+          respawn_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          character_name?: string
+          created_at?: string | null
+          id?: string
+          joined_at?: string
+          notified?: boolean | null
+          respawn_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "respawn_queue_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "respawn_queue_respawn_id_fkey"
+            columns: ["respawn_id"]
+            isOneToOne: false
+            referencedRelation: "respawns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       respawns: {
         Row: {
           city: string
@@ -233,6 +284,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      join_respawn_queue: {
+        Args: { p_character_id: string; p_respawn_id: string }
+        Returns: Json
+      }
+      leave_respawn_queue: {
+        Args: { p_respawn_id: string }
+        Returns: Json
       }
       release_claim: {
         Args: { p_claim_id: string }

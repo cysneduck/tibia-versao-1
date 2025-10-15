@@ -8,12 +8,14 @@ import { useRespawns } from "@/hooks/useRespawns";
 import { useClaims } from "@/hooks/useClaims";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
+import { useQueue } from "@/hooks/useQueue";
 
 export default function Dashboard() {
   const { user, userRole } = useAuth();
   const { respawns, isLoading } = useRespawns();
   const { claimRespawn, releaseClaim } = useClaims(user?.id);
   const { profile, characters } = useProfile(user?.id);
+  const { queueData, joinQueue, leaveQueue } = useQueue(user?.id);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("all");
@@ -110,17 +112,29 @@ export default function Dashboard() {
               <CitySection
                 key={city}
                 cityName={city}
-                respawns={cityRespawns.map(r => ({
-                  code: r.code,
-                  name: r.name,
-                  isClaimed: !!r.claim,
-                  claimedBy: r.claim?.character_name,
-                  characterName: r.claim?.character_name,
-                  timeRemaining: r.claim?.expires_at,
-                  respawnId: r.id,
-                  claimId: r.claim?.id,
-                  claim: r.claim,
-                }))}
+                respawns={cityRespawns.map(r => {
+                  const queueEntries = queueData.filter(q => q.respawn_id === r.id);
+                  const userInQueue = queueEntries.find(q => q.user_id === user?.id);
+                  const queuePosition = userInQueue 
+                    ? queueEntries.findIndex(q => q.user_id === user?.id) + 1 
+                    : null;
+                  
+                  return {
+                    code: r.code,
+                    name: r.name,
+                    isClaimed: !!r.claim,
+                    claimedBy: r.claim?.character_name,
+                    characterName: r.claim?.character_name,
+                    timeRemaining: r.claim?.expires_at,
+                    respawnId: r.id,
+                    claimId: r.claim?.id,
+                    claim: r.claim,
+                    queueCount: queueEntries.length,
+                    userInQueue: !!userInQueue,
+                    queuePosition,
+                    nextInQueue: queueEntries[0]?.character_name,
+                  };
+                })}
                 userType={userRole as 'guild' | 'neutro'}
                 userId={user?.id}
                 onClaimClick={(respawn) => {
@@ -130,6 +144,14 @@ export default function Dashboard() {
                 onReleaseClick={(respawn) => {
                   setSelectedRespawn({ id: respawn.respawnId, ...respawn });
                   setReleaseDialogOpen(true);
+                }}
+                onJoinQueue={(respawn) => {
+                  if (activeCharacter) {
+                    joinQueue.mutate({ respawnId: respawn.respawnId, characterId: activeCharacter.id });
+                  }
+                }}
+                onLeaveQueue={(respawn) => {
+                  leaveQueue.mutate(respawn.respawnId);
                 }}
               />
             ))
