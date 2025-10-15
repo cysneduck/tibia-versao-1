@@ -39,9 +39,7 @@ export const CountdownTimer = ({ expiresAt, compact = false }: CountdownTimerPro
       if (compact) {
         setTimeLeft(`${hours}h ${minutes}m`);
       } else {
-        // Show countdown with absolute time
-        const expiryDate = format(new Date(expiresAt), "MMM dd, HH:mm");
-        setTimeLeft(`${hours}h ${minutes}m ${seconds}s (${expiryDate})`);
+        setTimeLeft(`${hours}h ${minutes}min left`);
       }
     };
 

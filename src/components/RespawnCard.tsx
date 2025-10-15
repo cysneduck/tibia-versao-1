@@ -73,7 +73,7 @@ export const RespawnCard = ({
                 className="w-full"
                 onClick={onReleaseClick}
               >
-                Release Claim
+                Leave Respawn
               </Button>
             )}
           </>

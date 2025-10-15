@@ -29,9 +29,9 @@ export const ReleaseDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Release Claim</DialogTitle>
+          <DialogTitle>Leave Respawn</DialogTitle>
           <DialogDescription>
-            Are you sure you want to release this respawn claim early?
+            Are you sure you want to leave this respawn early?
           </DialogDescription>
         </DialogHeader>
         
@@ -45,7 +45,7 @@ export const ReleaseDialog = ({
           
           <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">
             <p className="text-sm text-foreground">
-              This will make the respawn available for other members to claim immediately.
+              This will make the respawn available for other members immediately.
             </p>
           </div>
         </div>
@@ -55,7 +55,7 @@ export const ReleaseDialog = ({
             Cancel
           </Button>
           <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>
-            {isLoading ? "Releasing..." : "Release Claim"}
+            {isLoading ? "Leaving..." : "Leave Respawn"}
           </Button>
         </DialogFooter>
       </DialogContent>
