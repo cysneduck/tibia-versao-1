@@ -3,6 +3,8 @@ import { Header } from "./Header";
 import { Link, useLocation } from "react-router-dom";
 import { Home, List, Settings, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -11,6 +13,8 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children, isAdmin = false }: DashboardLayoutProps) => {
   const location = useLocation();
+  const { user, userRole } = useAuth();
+  const { profile, characters } = useProfile(user?.id);
 
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },
@@ -18,9 +22,16 @@ export const DashboardLayout = ({ children, isAdmin = false }: DashboardLayoutPr
     ...(isAdmin ? [{ icon: Settings, label: "Admin", path: "/admin" }] : []),
   ];
 
+  const activeCharacter = characters?.find(char => char.id === profile?.active_character_id);
+  const displayName = activeCharacter?.name || user?.email?.split('@')[0] || "User";
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header isLoggedIn username="Dark Knight" userType="guild" />
+      <Header 
+        isLoggedIn={!!user} 
+        username={displayName} 
+        userType={userRole === 'admin' ? 'guild' : userRole as "guild" | "neutro"} 
+      />
       
       <nav className="border-b border-border bg-card/30 backdrop-blur-sm sticky top-[73px] z-40">
         <div className="container mx-auto px-4">

@@ -3,6 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { FilterBar } from "@/components/FilterBar";
 import { CitySection } from "@/components/CitySection";
 import { ClaimDialog } from "@/components/ClaimDialog";
+import { ReleaseDialog } from "@/components/ReleaseDialog";
 import { useRespawns } from "@/hooks/useRespawns";
 import { useClaims } from "@/hooks/useClaims";
 import { useProfile } from "@/hooks/useProfile";
@@ -11,13 +12,14 @@ import { useAuth } from "@/hooks/useAuth";
 export default function Dashboard() {
   const { user, userRole } = useAuth();
   const { respawns, isLoading } = useRespawns();
-  const { claimRespawn } = useClaims(user?.id);
+  const { claimRespawn, releaseClaim } = useClaims(user?.id);
   const { profile, characters } = useProfile(user?.id);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [claimDialogOpen, setClaimDialogOpen] = useState(false);
+  const [releaseDialogOpen, setReleaseDialogOpen] = useState(false);
   const [selectedRespawn, setSelectedRespawn] = useState<any>(null);
 
   const cities = Array.from(new Set(respawns.map(r => r.city))).sort();
@@ -55,6 +57,17 @@ export default function Dashboard() {
         },
       }
     );
+  };
+
+  const handleConfirmRelease = async () => {
+    if (!selectedRespawn?.claimId) return;
+    
+    releaseClaim.mutate(selectedRespawn.claimId, {
+      onSuccess: () => {
+        setReleaseDialogOpen(false);
+        setSelectedRespawn(null);
+      },
+    });
   };
 
   const duration = userRole === 'guild' ? '2 hours 15 minutes' : '1 hour 15 minutes';
@@ -106,12 +119,17 @@ export default function Dashboard() {
                   timeRemaining: r.claim?.expires_at,
                   respawnId: r.id,
                   claimId: r.claim?.id,
-                  userId: r.claim?.user_id,
+                  claim: r.claim,
                 }))}
                 userType={userRole as 'guild' | 'neutro'}
+                userId={user?.id}
                 onClaimClick={(respawn) => {
                   setSelectedRespawn({ id: respawn.respawnId, ...respawn });
                   setClaimDialogOpen(true);
+                }}
+                onReleaseClick={(respawn) => {
+                  setSelectedRespawn({ id: respawn.respawnId, ...respawn });
+                  setReleaseDialogOpen(true);
                 }}
               />
             ))
@@ -129,6 +147,17 @@ export default function Dashboard() {
           duration={duration}
           onConfirm={handleConfirmClaim}
           isLoading={claimRespawn.isPending}
+        />
+      )}
+
+      {selectedRespawn && (
+        <ReleaseDialog
+          open={releaseDialogOpen}
+          onOpenChange={setReleaseDialogOpen}
+          respawnCode={selectedRespawn.code}
+          respawnName={selectedRespawn.name}
+          onConfirm={handleConfirmRelease}
+          isLoading={releaseClaim.isPending}
         />
       )}
     </DashboardLayout>

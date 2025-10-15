@@ -14,6 +14,7 @@ interface ReleaseDialogProps {
   respawnCode: string;
   respawnName: string;
   onConfirm: () => void;
+  isLoading?: boolean;
 }
 
 export const ReleaseDialog = ({
@@ -22,6 +23,7 @@ export const ReleaseDialog = ({
   respawnCode,
   respawnName,
   onConfirm,
+  isLoading = false,
 }: ReleaseDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -49,11 +51,11 @@ export const ReleaseDialog = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={onConfirm}>
-            Release Claim
+          <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>
+            {isLoading ? "Releasing..." : "Release Claim"}
           </Button>
         </DialogFooter>
       </DialogContent>

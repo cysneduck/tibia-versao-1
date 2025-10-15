@@ -30,8 +30,8 @@ export default function Profile() {
   const [newCharVocation, setNewCharVocation] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const handleSaveNotifications = (field: "email_notifications" | "claim_reminders", value: boolean) => {
-    updateProfile.mutate({ [field]: value });
+  const handleSaveNotifications = (value: boolean) => {
+    updateProfile.mutate({ claim_reminders: value });
   };
 
   const handleSetActive = (characterId: string) => {
@@ -251,25 +251,12 @@ export default function Profile() {
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label>Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive updates about respawn activity</p>
-              </div>
-              <Switch
-                checked={profile?.email_notifications ?? true}
-                onCheckedChange={(value) => handleSaveNotifications("email_notifications", value)}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
                 <Label>Claim Reminders</Label>
                 <p className="text-sm text-muted-foreground">Get notified when your claims are about to expire</p>
               </div>
               <Switch
                 checked={profile?.claim_reminders ?? true}
-                onCheckedChange={(value) => handleSaveNotifications("claim_reminders", value)}
+                onCheckedChange={(value) => handleSaveNotifications(value)}
               />
             </div>
           </CardContent>

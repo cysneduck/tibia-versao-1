@@ -16,6 +16,7 @@ interface ClaimDialogProps {
   characterName: string;
   duration: string;
   onConfirm: () => void;
+  isLoading?: boolean;
 }
 
 export const ClaimDialog = ({
@@ -26,6 +27,7 @@ export const ClaimDialog = ({
   characterName,
   duration,
   onConfirm,
+  isLoading = false,
 }: ClaimDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -63,11 +65,11 @@ export const ClaimDialog = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Cancel
           </Button>
-          <Button onClick={onConfirm}>
-            Confirm Claim
+          <Button onClick={onConfirm} disabled={isLoading}>
+            {isLoading ? "Claiming..." : "Confirm Claim"}
           </Button>
         </DialogFooter>
       </DialogContent>

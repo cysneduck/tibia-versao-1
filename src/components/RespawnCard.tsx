@@ -11,6 +11,10 @@ interface RespawnCardProps {
   characterName?: string;
   timeRemaining?: string;
   userType?: "guild" | "neutro";
+  onClaimClick?: () => void;
+  onReleaseClick?: () => void;
+  claimId?: string;
+  isOwnClaim?: boolean;
 }
 
 export const RespawnCard = ({ 
@@ -20,7 +24,10 @@ export const RespawnCard = ({
   claimedBy,
   characterName,
   timeRemaining,
-  userType 
+  userType,
+  onClaimClick,
+  onReleaseClick,
+  isOwnClaim
 }: RespawnCardProps) => {
   return (
     <Card className={`transition-all duration-300 hover:scale-[1.02] ${
@@ -60,10 +67,20 @@ export const RespawnCard = ({
               <Clock className="h-4 w-4 text-secondary" />
               <span className="text-secondary glow-red font-medium">{timeRemaining}</span>
             </div>
+            {isOwnClaim && onReleaseClick && (
+              <Button 
+                variant="destructive"
+                className="w-full"
+                onClick={onReleaseClick}
+              >
+                Release Claim
+              </Button>
+            )}
           </>
         ) : (
           <Button 
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground glow-cyan font-semibold"
+            onClick={onClaimClick}
           >
             Claim Respawn
           </Button>

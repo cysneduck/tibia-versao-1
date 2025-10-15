@@ -13,16 +13,18 @@ interface CitySectionProps {
   respawns: Respawn[];
   userType?: "guild" | "neutro";
   onClaimClick?: (respawn: any) => void;
+  onReleaseClick?: (respawn: any) => void;
+  userId?: string;
 }
 
-export const CitySection = ({ cityName, respawns, userType, onClaimClick }: CitySectionProps) => {
+export const CitySection = ({ cityName, respawns, userType, onClaimClick, onReleaseClick, userId }: CitySectionProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-primary glow-cyan tracking-wide border-b border-border pb-2">
         {cityName}
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {respawns.map((respawn) => (
+        {respawns.map((respawn: any) => (
           <RespawnCard 
             key={respawn.code}
             code={respawn.code}
@@ -32,6 +34,9 @@ export const CitySection = ({ cityName, respawns, userType, onClaimClick }: City
             timeRemaining={respawn.timeRemaining}
             userType={userType}
             onClaimClick={onClaimClick ? () => onClaimClick(respawn) : undefined}
+            onReleaseClick={onReleaseClick ? () => onReleaseClick(respawn) : undefined}
+            claimId={respawn.claimId}
+            isOwnClaim={respawn.claim?.user_id === userId}
           />
         ))}
       </div>
