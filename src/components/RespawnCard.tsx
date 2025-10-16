@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { User, Users } from "lucide-react";
 import { CountdownTimer } from "./CountdownTimer";
 import { QueueModal } from "./QueueModal";
+import { PriorityTimer } from "./PriorityTimer";
 
 interface QueueEntry {
   id: string;
@@ -36,7 +37,6 @@ interface RespawnCardProps {
   userHasPriority?: boolean;
   priorityExpiresAt?: string | null;
   someoneElseHasPriority?: boolean;
-  priorityTimeRemaining?: string;
 }
 
 export const RespawnCard = ({ 
@@ -60,8 +60,7 @@ export const RespawnCard = ({
   userId,
   userHasPriority = false,
   priorityExpiresAt,
-  someoneElseHasPriority = false,
-  priorityTimeRemaining
+  someoneElseHasPriority = false
 }: RespawnCardProps) => {
   const [queueModalOpen, setQueueModalOpen] = useState(false);
   return (
@@ -155,13 +154,13 @@ export const RespawnCard = ({
               </div>
             )}
             
-            {someoneElseHasPriority && priorityTimeRemaining && (
+            {someoneElseHasPriority && priorityExpiresAt && (
               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mb-2">
                 <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 mb-1">
                   ⏳ Someone has priority
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {priorityTimeRemaining} remaining
+                  <PriorityTimer expiresAt={priorityExpiresAt} />
                 </p>
               </div>
             )}

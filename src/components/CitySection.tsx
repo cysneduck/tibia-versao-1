@@ -9,7 +9,6 @@ interface Respawn {
   userHasPriority?: boolean;
   priorityExpiresAt?: string | null;
   someoneElseHasPriority?: boolean;
-  priorityTimeRemaining?: string;
 }
 
 interface CitySectionProps {
@@ -54,7 +53,6 @@ export const CitySection = ({ cityName, respawns, userType, onClaimClick, onRele
             userHasPriority={respawn.userHasPriority}
             priorityExpiresAt={respawn.priorityExpiresAt}
             someoneElseHasPriority={respawn.someoneElseHasPriority}
-            priorityTimeRemaining={respawn.priorityTimeRemaining}
           />
         ))}
       </div>
