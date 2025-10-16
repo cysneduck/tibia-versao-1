@@ -15,56 +15,69 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        toast({
-          title: "Account created!",
-          description: "You can now sign in with your credentials.",
-        });
-        setIsSignUp(false);
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      // Check if user needs onboarding
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed, first_login')
+        .eq('id', data.user.id)
+        .single();
 
-        if (error) throw error;
+      const needsOnboarding = profile?.first_login === true || profile?.onboarding_completed === false;
 
-        // Check if user needs onboarding
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('onboarding_completed, first_login')
-          .eq('id', data.user.id)
-          .single();
+      toast({
+        title: needsOnboarding ? "Welcome!" : "Welcome back!",
+        description: needsOnboarding 
+          ? "Let's set up your account" 
+          : "You have successfully signed in.",
+      });
 
-        const needsOnboarding = profile?.first_login === true || profile?.onboarding_completed === false;
-
-        toast({
-          title: needsOnboarding ? "Welcome!" : "Welcome back!",
-          description: needsOnboarding 
-            ? "Let's set up your account" 
-            : "You have successfully signed in.",
-        });
-
-        // Redirect based on onboarding status
-        navigate(needsOnboarding ? "/onboarding" : "/dashboard");
-      }
+      // Redirect based on onboarding status
+      navigate(needsOnboarding ? "/onboarding" : "/dashboard");
     } catch (error: any) {
       toast({
-        title: isSignUp ? "Sign up failed" : "Sign in failed",
+        title: "Sign in failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      setResetEmailSent(true);
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Reset failed",
         description: error.message,
         variant: "destructive",
       });
@@ -78,56 +91,114 @@ export default function Login() {
       <div className="w-full max-w-md space-y-4">
         <Card className="border-border bg-card/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-2xl">{isSignUp ? "Create Account" : "Welcome Back"}</CardTitle>
+            <CardTitle className="text-2xl">
+              {resetEmailSent ? "Check Your Email" : isForgotPassword ? "Reset Password" : "Welcome Back"}
+            </CardTitle>
             <CardDescription>
-              {isSignUp ? "Sign up to start managing respawn claims" : "Invitation-only access to Resonance Remain"}
+              {resetEmailSent 
+                ? "We've sent password reset instructions to your email" 
+                : isForgotPassword 
+                  ? "Enter your email to receive reset instructions" 
+                  : "Invitation-only access to Claimed System"}
             </CardDescription>
           </CardHeader>
           
-          <form onSubmit={handleAuth}>
+          {resetEmailSent ? (
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="knight@tibia.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                />
+              <div className="text-center py-4">
+                <div className="text-4xl mb-2">📧</div>
+                <p className="text-sm text-muted-foreground mb-4">{email}</p>
+                <p className="text-sm text-muted-foreground">
+                  Didn't receive it? Check your spam folder or try again.
+                </p>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  minLength={6}
-                />
-              </div>
-              
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Loading..." : isSignUp ? "Sign Up" : "Login"}
-              </Button>
-              
               <Button
                 type="button"
                 variant="ghost"
                 className="w-full"
-                onClick={() => setIsSignUp(!isSignUp)}
-                disabled={loading}
+                onClick={() => {
+                  setResetEmailSent(false);
+                  setIsForgotPassword(false);
+                }}
               >
-                {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
+                ← Back to login
               </Button>
             </CardContent>
-          </form>
+          ) : isForgotPassword ? (
+            <form onSubmit={handlePasswordReset}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="knight@tibia.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Sending..." : "Send Reset Link"}
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setIsForgotPassword(false)}
+                  disabled={loading}
+                >
+                  ← Back to login
+                </Button>
+              </CardContent>
+            </form>
+          ) : (
+            <form onSubmit={handleAuth}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="knight@tibia.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPassword(true)}
+                    className="text-sm text-primary hover:underline"
+                    disabled={loading}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Loading..." : "Login"}
+                </Button>
+              </CardContent>
+            </form>
+          )}
         </Card>
 
         <div className="space-y-2">
