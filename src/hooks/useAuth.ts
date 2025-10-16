@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
-type UserRole = 'admin' | 'guild' | 'neutro';
+type UserRole = 'admin' | 'guild' | 'neutro' | 'master_admin';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -61,7 +61,8 @@ export const useAuth = () => {
     await supabase.auth.signOut();
   };
 
-  const isAdmin = userRole === 'admin';
+  const isAdmin = userRole === 'admin' || userRole === 'master_admin';
+  const isMasterAdmin = userRole === 'master_admin';
 
   return {
     user,
@@ -69,5 +70,6 @@ export const useAuth = () => {
     loading,
     signOut,
     isAdmin,
+    isMasterAdmin,
   };
 };

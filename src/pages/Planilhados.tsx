@@ -10,7 +10,7 @@ export default function Planilhados() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Planilhados</h1>
-          <p className="text-muted-foreground">View and manage spreadsheet data</p>
+          <p className="text-muted-foreground">Dados abertos da planilha</p>
         </div>
         
         <div className="w-full h-[calc(100vh-280px)] border border-border rounded-lg overflow-hidden bg-card">

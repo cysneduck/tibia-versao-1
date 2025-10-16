@@ -22,9 +22,11 @@ import {
 } from "@/components/ui/select";
 import { Users, MapPin, TrendingUp } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Admin() {
   const { users, settings, stats, isLoading, updateUserRole, updateSystemSetting } = useAdmin();
+  const { isMasterAdmin } = useAuth();
 
   const [guildHours, setGuildHours] = useState(settings?.guild_claim_hours || "2");
   const [guildMinutes, setGuildMinutes] = useState(settings?.guild_claim_minutes || "15");
@@ -105,7 +107,14 @@ export default function Admin() {
         <Card className="border-border bg-card/50">
           <CardHeader>
             <CardTitle>Claim Duration Settings</CardTitle>
-            <CardDescription>Configure default claim durations for different user types</CardDescription>
+            <CardDescription>
+              Configure default claim durations for different user types
+              {!isMasterAdmin && (
+                <span className="block mt-1 text-yellow-500">
+                  ⚠️ Only Master Admins can modify these settings
+                </span>
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSaveSettings} className="space-y-6">
@@ -121,6 +130,7 @@ export default function Admin() {
                         value={guildHours}
                         onChange={(e) => setGuildHours(e.target.value)}
                         className="w-20"
+                        disabled={!isMasterAdmin}
                       />
                       <span className="text-sm text-muted-foreground">hours</span>
                     </div>
@@ -132,6 +142,7 @@ export default function Admin() {
                         value={guildMinutes}
                         onChange={(e) => setGuildMinutes(e.target.value)}
                         className="w-20"
+                        disabled={!isMasterAdmin}
                       />
                       <span className="text-sm text-muted-foreground">minutes</span>
                     </div>
@@ -149,6 +160,7 @@ export default function Admin() {
                         value={neutroHours}
                         onChange={(e) => setNeutroHours(e.target.value)}
                         className="w-20"
+                        disabled={!isMasterAdmin}
                       />
                       <span className="text-sm text-muted-foreground">hours</span>
                     </div>
@@ -160,6 +172,7 @@ export default function Admin() {
                         value={neutroMinutes}
                         onChange={(e) => setNeutroMinutes(e.target.value)}
                         className="w-20"
+                        disabled={!isMasterAdmin}
                       />
                       <span className="text-sm text-muted-foreground">minutes</span>
                     </div>
@@ -167,7 +180,7 @@ export default function Admin() {
                 </div>
               </div>
 
-              <Button type="submit" disabled={updateSystemSetting.isPending}>
+              <Button type="submit" disabled={updateSystemSetting.isPending || !isMasterAdmin}>
                 Save Settings
               </Button>
             </form>
@@ -178,7 +191,14 @@ export default function Admin() {
         <Card className="border-border bg-card/50">
           <CardHeader>
             <CardTitle>User Management</CardTitle>
-            <CardDescription>Manage user accounts and permissions</CardDescription>
+            <CardDescription>
+              Manage user accounts and permissions
+              {!isMasterAdmin && (
+                <span className="block mt-1 text-blue-500">
+                  ℹ️ You can only change roles between Neutro and Guild
+                </span>
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -197,26 +217,35 @@ export default function Admin() {
                       <Badge
                         variant="outline"
                         className={
-                          user.role === "admin"
+                          user.role === "master_admin"
+                            ? "border-red-500 text-red-500"
+                            : user.role === "admin"
                             ? "border-purple-500 text-purple-500"
                             : user.role === "guild"
                             ? "border-primary text-primary"
                             : "border-secondary text-secondary"
                         }
                       >
-                        {user.role === "admin" ? "Admin" : user.role === "guild" ? "Guild" : "Neutro"}
+                        {user.role === "master_admin" 
+                          ? "Master Admin" 
+                          : user.role === "admin" 
+                          ? "Admin" 
+                          : user.role === "guild" 
+                          ? "Guild" 
+                          : "Neutro"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Select
                         value={user.role}
                         onValueChange={(value) => handleChangeUserRole(user.id, value)}
+                        disabled={user.role === "master_admin"}
                       >
                         <SelectTrigger className="w-[140px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
+                          {isMasterAdmin && <SelectItem value="admin">Admin</SelectItem>}
                           <SelectItem value="guild">Guild</SelectItem>
                           <SelectItem value="neutro">Neutro</SelectItem>
                         </SelectContent>

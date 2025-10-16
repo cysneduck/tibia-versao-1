@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from './useAuth';
 
 export const useAdmin = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { isMasterAdmin } = useAuth();
 
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -48,13 +50,43 @@ export const useAdmin = () => {
 
   const updateUserRole = useMutation({
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: string }) => {
+      // Get current role of target user
+      const { data: currentRoleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+      
+      const currentRole = currentRoleData?.role;
+      
+      // Protection: cannot modify master_admin roles
+      if (currentRole === 'master_admin') {
+        throw new Error('Cannot modify Master Admin roles');
+      }
+      
+      // Protection: regular admins can only change neutro <-> guild
+      if (!isMasterAdmin) {
+        const validTransitions = [
+          { from: 'neutro', to: 'guild' },
+          { from: 'guild', to: 'neutro' }
+        ];
+        
+        const isValidTransition = validTransitions.some(
+          t => t.from === currentRole && t.to === newRole
+        );
+        
+        if (!isValidTransition) {
+          throw new Error('You can only change roles between Neutro and Guild');
+        }
+      }
+      
       // Delete existing role
       await supabase.from('user_roles').delete().eq('user_id', userId);
       
       // Insert new role
       const { error } = await supabase
         .from('user_roles')
-        .insert([{ user_id: userId, role: newRole as 'admin' | 'guild' | 'neutro' }]);
+        .insert([{ user_id: userId, role: newRole as 'admin' | 'guild' | 'neutro' | 'master_admin' }]);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -72,6 +104,10 @@ export const useAdmin = () => {
 
   const updateSystemSetting = useMutation({
     mutationFn: async ({ key, value }: { key: string; value: string }) => {
+      if (!isMasterAdmin) {
+        throw new Error('Only Master Admins can change system settings');
+      }
+      
       const { error } = await supabase
         .from('system_settings')
         .update({ setting_value: value })

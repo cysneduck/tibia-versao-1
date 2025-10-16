@@ -343,6 +343,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_master_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       join_respawn_queue: {
         Args: { p_character_id: string; p_respawn_id: string }
         Returns: Json
@@ -357,7 +361,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "guild" | "neutro"
+      app_role: "admin" | "guild" | "neutro" | "master_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -485,7 +489,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "guild", "neutro"],
+      app_role: ["admin", "guild", "neutro", "master_admin"],
     },
   },
 } as const
