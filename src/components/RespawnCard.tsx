@@ -91,7 +91,7 @@ export const RespawnCard = ({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className={`space-y-3 ${!isClaimed ? 'flex flex-col justify-center min-h-[200px]' : ''}`}>
+      <CardContent className="space-y-3">
         {isClaimed ? (
           <>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
