@@ -3,10 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface SendTestNotificationParams {
-  targetUserId?: string;
-  notificationType: 'claim_ready' | 'claim_expiring' | 'queue_update' | 'system_alert' | 'custom';
-  customTitle?: string;
-  customMessage?: string;
+  notificationType: 'claim_ready' | 'claim_expiring' | 'queue_update' | 'system_alert';
 }
 
 export const NOTIFICATION_TEMPLATES = {
@@ -41,13 +38,10 @@ export const useNotificationTesting = () => {
   const { toast } = useToast();
 
   const sendTestNotification = useMutation({
-    mutationFn: async ({ targetUserId, notificationType, customTitle, customMessage }: SendTestNotificationParams) => {
+    mutationFn: async ({ notificationType }: SendTestNotificationParams) => {
       const { data, error } = await supabase.functions.invoke('test-notification', {
         body: {
-          target_user_id: targetUserId,
           notification_type: notificationType,
-          custom_title: customTitle,
-          custom_message: customMessage,
         },
       });
 
@@ -70,27 +64,8 @@ export const useNotificationTesting = () => {
     },
   });
 
-  const testAllChannels = async (targetUserId?: string) => {
-    const types: Array<'claim_ready' | 'claim_expiring' | 'queue_update' | 'system_alert'> = [
-      'system_alert',
-      'queue_update', 
-      'claim_expiring',
-      'claim_ready'
-    ];
-
-    for (const type of types) {
-      await sendTestNotification.mutateAsync({
-        targetUserId,
-        notificationType: type,
-      });
-      // Wait 2 seconds between notifications
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-  };
-
   return {
     sendTestNotification,
-    testAllChannels,
     isLoading: sendTestNotification.isPending,
   };
 };

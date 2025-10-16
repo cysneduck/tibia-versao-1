@@ -189,7 +189,7 @@ export default function Admin() {
         </Card>
 
         {/* Notification Testing */}
-        <NotificationTestPanel users={users} />
+        <NotificationTestPanel />
 
         {/* User Management */}
         <Card className="border-border bg-card/50">

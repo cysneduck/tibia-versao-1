@@ -47,10 +47,10 @@ serve(async (req) => {
       );
     }
 
-    const { target_user_id, notification_type, custom_title, custom_message } = await req.json();
+    const { notification_type } = await req.json();
 
-    // Use requesting user's ID if no target specified
-    const targetUserId = target_user_id || user.id;
+    // Always use requesting user's ID
+    const targetUserId = user.id;
 
     // Define notification templates
     const templates: Record<string, { title: string; message: string; type: string }> = {
@@ -72,11 +72,6 @@ serve(async (req) => {
       system_alert: {
         title: "🔔 Alerta do Sistema",
         message: "Esta é uma notificação de teste do sistema",
-        type: "system_alert"
-      },
-      custom: {
-        title: custom_title || "Notificação de Teste",
-        message: custom_message || "Esta é uma notificação personalizada de teste",
         type: "system_alert"
       }
     };

@@ -1,174 +1,82 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { useNotificationTesting, NOTIFICATION_TEMPLATES } from '@/hooks/useNotificationTesting';
-import { useAuth } from '@/hooks/useAuth';
-import { Bell, Send, Zap, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Loader2 } from 'lucide-react';
 
-interface NotificationTestPanelProps {
-  users?: Array<{ id: string; email: string }>;
-}
+const NOTIFICATION_ICONS = {
+  claim_ready: '🔥',
+  claim_expiring: '⏰',
+  queue_update: '📍',
+  system_alert: '🔔',
+} as const;
 
-export const NotificationTestPanel = ({ users = [] }: NotificationTestPanelProps) => {
-  const { user } = useAuth();
-  const { sendTestNotification, testAllChannels, isLoading } = useNotificationTesting();
-  const [notificationType, setNotificationType] = useState<'claim_ready' | 'claim_expiring' | 'queue_update' | 'system_alert' | 'custom'>('claim_ready');
-  const [targetUserId, setTargetUserId] = useState<string>('myself');
-  const [customTitle, setCustomTitle] = useState('');
-  const [customMessage, setCustomMessage] = useState('');
+const PRIORITY_VARIANTS = {
+  high: 'destructive',
+  medium: 'default',
+  normal: 'secondary',
+} as const;
 
-  const handleSendTest = () => {
-    sendTestNotification.mutate({
-      targetUserId: targetUserId === 'myself' ? user?.id : targetUserId,
-      notificationType,
-      customTitle: notificationType === 'custom' ? customTitle : undefined,
-      customMessage: notificationType === 'custom' ? customMessage : undefined,
-    });
+export const NotificationTestPanel = () => {
+  const [activeCard, setActiveCard] = useState<string | null>(null);
+  const { sendTestNotification } = useNotificationTesting();
+
+  const handleCardClick = (type: 'claim_ready' | 'claim_expiring' | 'queue_update' | 'system_alert') => {
+    setActiveCard(type);
+    sendTestNotification.mutate(
+      { notificationType: type },
+      {
+        onSettled: () => setActiveCard(null)
+      }
+    );
   };
-
-  const handleTestAllChannels = async () => {
-    await testAllChannels(targetUserId === 'myself' ? user?.id : targetUserId);
-  };
-
-  const currentTemplate = notificationType !== 'custom' ? NOTIFICATION_TEMPLATES[notificationType] : null;
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notification Testing
-            </CardTitle>
-            <CardDescription>
-              Test the notification system with different types and channels
-            </CardDescription>
-          </div>
-        </div>
+        <CardTitle>Notification Testing</CardTitle>
+        <CardDescription>
+          Click any card to send a test notification to yourself
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Notification Type Selector */}
-        <div className="space-y-2">
-          <Label>Notification Type</Label>
-          <Select value={notificationType} onValueChange={(value: any) => setNotificationType(value)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="claim_ready">
-                <div className="flex items-center gap-2">
-                  🔥 Claim Ready <Badge variant="destructive" className="ml-2">High Priority</Badge>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4">
+          {Object.entries(NOTIFICATION_TEMPLATES).map(([key, template]) => {
+            const type = key as keyof typeof NOTIFICATION_TEMPLATES;
+            const isLoading = activeCard === key;
+            
+            return (
+              <button
+                key={key}
+                onClick={() => handleCardClick(type)}
+                disabled={isLoading}
+                className="relative flex flex-col items-start p-6 rounded-lg border-2 border-border bg-card hover:border-primary hover:scale-105 transition-all duration-200 disabled:opacity-60 disabled:pointer-events-none text-left"
+              >
+                {isLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                )}
+                
+                <div className="text-4xl mb-3">{NOTIFICATION_ICONS[type]}</div>
+                
+                <div className="font-semibold text-lg mb-2 line-clamp-1">
+                  {template.title}
                 </div>
-              </SelectItem>
-              <SelectItem value="claim_expiring">
-                <div className="flex items-center gap-2">
-                  ⏰ Claim Expiring <Badge variant="secondary" className="ml-2">Medium</Badge>
+                
+                <div className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                  {template.message}
                 </div>
-              </SelectItem>
-              <SelectItem value="queue_update">📍 Queue Update</SelectItem>
-              <SelectItem value="system_alert">🔔 System Alert</SelectItem>
-              <SelectItem value="custom">✏️ Custom Message</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Target User Selector */}
-        <div className="space-y-2">
-          <Label>Target User</Label>
-          <Select value={targetUserId} onValueChange={setTargetUserId}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="myself">Myself</SelectItem>
-              {users.map((u) => (
-                <SelectItem key={u.id} value={u.id}>
-                  {u.email}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Custom Message Fields */}
-        {notificationType === 'custom' && (
-          <>
-            <div className="space-y-2">
-              <Label>Custom Title</Label>
-              <Input
-                value={customTitle}
-                onChange={(e) => setCustomTitle(e.target.value)}
-                placeholder="Enter notification title"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Custom Message</Label>
-              <Textarea
-                value={customMessage}
-                onChange={(e) => setCustomMessage(e.target.value)}
-                placeholder="Enter notification message"
-                rows={3}
-              />
-            </div>
-          </>
-        )}
-
-        {/* Preview */}
-        {currentTemplate && (
-          <div className="rounded-lg border border-border bg-muted/50 p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Badge variant={currentTemplate.priority === 'high' ? 'destructive' : 'secondary'}>
-                {currentTemplate.priority.toUpperCase()}
-              </Badge>
-              <span className="text-sm font-medium">Preview</span>
-            </div>
-            <div className="space-y-1">
-              <p className="font-semibold">{currentTemplate.title}</p>
-              <p className="text-sm text-muted-foreground">{currentTemplate.message}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <Button 
-            onClick={handleSendTest} 
-            disabled={isLoading}
-            className="flex-1"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              <>
-                <Send className="mr-2 h-4 w-4" />
-                Send Test Notification
-              </>
-            )}
-          </Button>
-          <Button 
-            onClick={handleTestAllChannels} 
-            disabled={isLoading}
-            variant="outline"
-          >
-            <Zap className="mr-2 h-4 w-4" />
-            Test All Types
-          </Button>
-        </div>
-
-        {/* Info */}
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>• Test notifications will trigger all channels: toast, desktop, sound, and modal</p>
-          <p>• "Test All Types" will send 4 notifications sequentially with 2-second delays</p>
-          <p>• Make sure desktop notifications are enabled in your browser</p>
+                
+                <Badge 
+                  variant={PRIORITY_VARIANTS[template.priority as keyof typeof PRIORITY_VARIANTS]} 
+                  className="mt-auto"
+                >
+                  {template.priority.toUpperCase()}
+                </Badge>
+              </button>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
