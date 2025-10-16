@@ -17,9 +17,9 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt'],
       manifest: {
-        name: 'Resonance Remain',
-        short_name: 'Resonance',
-        description: 'Professional Respawn Coordination Platform',
+        name: 'Claimed System',
+        short_name: 'Claimed',
+        description: 'Tibia professional claimed system',
         theme_color: '#1a1a1a',
         background_color: '#000000',
         display: 'standalone',
