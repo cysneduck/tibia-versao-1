@@ -35,8 +35,6 @@ export default function Onboarding() {
 
   // Step 2: Character Creation
   const [charName, setCharName] = useState("");
-  const [charLevel, setCharLevel] = useState("");
-  const [charVocation, setCharVocation] = useState("");
 
   const validatePassword = (password: string): { valid: boolean; error?: string } => {
     if (password === '123123') {
@@ -115,8 +113,6 @@ export default function Onboarding() {
     try {
       await addCharacter.mutateAsync({
         name: charName,
-        level: charLevel ? parseInt(charLevel) : undefined,
-        vocation: charVocation || undefined,
       });
       toast({
         title: "Personagem criado!",
@@ -269,37 +265,6 @@ export default function Onboarding() {
                       disabled={loading}
                       maxLength={50}
                     />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="charLevel">Level (opcional)</Label>
-                      <Input
-                        id="charLevel"
-                        type="number"
-                        value={charLevel}
-                        onChange={(e) => setCharLevel(e.target.value)}
-                        placeholder="ex: 500"
-                        disabled={loading}
-                        min={1}
-                        max={3000}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="charVocation">Vocação (opcional)</Label>
-                      <Select value={charVocation} onValueChange={setCharVocation} disabled={loading}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Elite Knight">Elite Knight</SelectItem>
-                          <SelectItem value="Royal Paladin">Royal Paladin</SelectItem>
-                          <SelectItem value="Elder Druid">Elder Druid</SelectItem>
-                          <SelectItem value="Master Sorcerer">Master Sorcerer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
                   
                   <Button type="submit" className="w-full" disabled={loading}>
