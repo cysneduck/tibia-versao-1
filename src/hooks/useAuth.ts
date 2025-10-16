@@ -6,7 +6,11 @@ type UserRole = 'admin' | 'guild' | 'neutro' | 'master_admin';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(() => {
+    // Initialize from localStorage if available
+    const cached = localStorage.getItem('user_role');
+    return cached ? (cached as UserRole) : null;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +33,7 @@ export const useAuth = () => {
         fetchUserRole(session.user.id);
       } else {
         setUserRole(null);
+        localStorage.removeItem('user_role');
         setLoading(false);
       }
     });
@@ -48,16 +53,22 @@ export const useAuth = () => {
         console.error('Error fetching user role:', error);
       }
       // If no role found, default to neutro
-      setUserRole((data?.role as UserRole) || 'neutro');
+      const role = (data?.role as UserRole) || 'neutro';
+      setUserRole(role);
+      // Persist to localStorage
+      localStorage.setItem('user_role', role);
     } catch (error) {
       console.error('Error fetching user role:', error);
-      setUserRole('neutro'); // Default to neutro on error
+      const defaultRole = 'neutro';
+      setUserRole(defaultRole);
+      localStorage.setItem('user_role', defaultRole);
     } finally {
       setLoading(false);
     }
   };
 
   const signOut = async () => {
+    localStorage.removeItem('user_role');
     await supabase.auth.signOut();
   };
 
