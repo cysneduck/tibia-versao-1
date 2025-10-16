@@ -184,11 +184,6 @@ export const RespawnCard = ({
             )}
           </>
         )}
-        {!isClaimed && userType && (
-          <p className="text-xs text-muted-foreground text-center">
-            Duration: {userType === "guild" ? "2h 15min" : "1h 15min"}
-          </p>
-        )}
       </CardContent>
 
       <QueueModal
