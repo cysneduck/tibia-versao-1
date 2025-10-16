@@ -48,7 +48,6 @@ export const useQueue = (userId: string | undefined) => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
-      queryClient.invalidateQueries({ queryKey: ['respawns'] });
       toast({
         title: 'Joined queue successfully!',
         description: `You are position #${data.position} in the queue.`,
@@ -106,7 +105,6 @@ export const useQueue = (userId: string | undefined) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
-      queryClient.invalidateQueries({ queryKey: ['respawns'] });
       toast({
         title: 'Left queue successfully',
         description: 'You have been removed from the queue.',
@@ -114,29 +112,25 @@ export const useQueue = (userId: string | undefined) => {
     },
   });
 
-  // Subscribe to real-time queue updates
+  // Subscribe to priority notifications only
   useEffect(() => {
     if (!userId) return;
 
     const channel = supabase
-      .channel('queue-changes')
+      .channel('queue-priority-notifications')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'respawn_queue',
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
-          queryClient.invalidateQueries({ queryKey: ['respawns'] });
           
           // Check if user got priority
-          if (payload.eventType === 'UPDATE' && 
-              payload.new.user_id === userId &&
-              payload.new.priority_expires_at && 
-              !payload.old.priority_expires_at) {
-            
+          if (payload.new.priority_expires_at && !payload.old.priority_expires_at) {
             const expiresAt = new Date(payload.new.priority_expires_at);
             const now = new Date();
             const minutesLeft = Math.floor((expiresAt.getTime() - now.getTime()) / 60000);

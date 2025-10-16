@@ -59,10 +59,10 @@ export const useRespawns = () => {
     },
   });
 
-  // Subscribe to real-time updates for claims
+  // Subscribe to real-time updates for claims AND queue
   useEffect(() => {
     const channel = supabase
-      .channel('claims-changes')
+      .channel('respawns-and-queue-changes')
       .on(
         'postgres_changes',
         {
@@ -72,6 +72,18 @@ export const useRespawns = () => {
         },
         () => {
           // Refetch respawns when claims change
+          refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'respawn_queue',
+        },
+        () => {
+          // Refetch respawns when queue changes
           refetch();
         }
       )
