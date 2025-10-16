@@ -83,7 +83,9 @@ export default function Profile() {
     );
   }
 
-  const userTypeDuration = userRole === "guild" ? "2 hours 15 minutes" : "1 hour 15 minutes";
+  const userTypeDuration = (userRole === "guild" || userRole === "admin" || userRole === "master_admin") 
+    ? "2 hours 30 minutes" 
+    : "1 hour 15 minutes";
 
   return (
     <DashboardLayout>
@@ -226,10 +228,18 @@ export default function Profile() {
                   <Badge
                     variant="outline"
                     className={
-                      userRole === "guild" ? "border-primary text-primary" : "border-secondary text-secondary"
+                      userRole === "guild" || userRole === "admin" || userRole === "master_admin"
+                        ? "border-primary text-primary" 
+                        : "border-secondary text-secondary"
                     }
                   >
-                    {userRole === "guild" ? "Guild Member" : userRole === "admin" ? "Admin" : "Neutro"}
+                    {userRole === "guild" 
+                      ? "Guild Member" 
+                      : userRole === "admin" 
+                      ? "Admin" 
+                      : userRole === "master_admin" 
+                      ? "Master Admin" 
+                      : "Neutro"}
                   </Badge>
                 </div>
               </div>

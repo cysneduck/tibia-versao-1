@@ -31,7 +31,7 @@ export const DashboardLayout = ({ children, isAdmin = false }: DashboardLayoutPr
       <Header 
         isLoggedIn={!!user} 
         username={displayName} 
-        userType={userRole === 'admin' ? 'guild' : userRole as "guild" | "neutro"} 
+        userType={userRole === 'admin' || userRole === 'master_admin' ? userRole : userRole as "guild" | "neutro"} 
       />
       
       <nav className="border-b border-border bg-card/30 backdrop-blur-sm sticky top-[73px] z-40">

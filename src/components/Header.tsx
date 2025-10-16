@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 interface HeaderProps {
   isLoggedIn?: boolean;
   username?: string;
-  userType?: "guild" | "neutro";
+  userType?: "guild" | "neutro" | "admin" | "master_admin";
 }
 
 export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) => {
@@ -33,12 +33,18 @@ export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) 
                 <Badge 
                   variant="outline" 
                   className={`text-xs ${
-                    userType === "guild" 
+                    userType === "guild" || userType === "admin" || userType === "master_admin"
                       ? 'border-primary text-primary' 
                       : 'border-secondary text-secondary'
                   }`}
                 >
-                  {userType === "guild" ? "Guild Member" : "Neutro"}
+                  {userType === "guild" 
+                    ? "Guild Member" 
+                    : userType === "admin" 
+                    ? "Admin" 
+                    : userType === "master_admin" 
+                    ? "Master Admin" 
+                    : "Neutro"}
                 </Badge>
               </div>
               {user && <NotificationPanel userId={user.id} />}
