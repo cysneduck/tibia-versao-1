@@ -47,8 +47,23 @@ export const useProfile = (userId: string | undefined) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async (newCharacter) => {
+      // Check if this is the first character
+      const { data: existingChars } = await supabase
+        .from('characters')
+        .select('id')
+        .eq('user_id', userId);
+      
+      // If it's the only character, set as active
+      if (existingChars && existingChars.length === 1) {
+        await supabase
+          .from('profiles')
+          .update({ active_character_id: newCharacter.id })
+          .eq('id', userId);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['characters', userId] });
+      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
       toast({ title: 'Character added successfully' });
     },
     onError: (error: Error) => {
@@ -92,6 +107,16 @@ export const useProfile = (userId: string | undefined) => {
 
   const deleteCharacter = useMutation({
     mutationFn: async (id: string) => {
+      // Check if this is the last character
+      const { data: allChars } = await supabase
+        .from('characters')
+        .select('id')
+        .eq('user_id', userId);
+      
+      if (allChars && allChars.length === 1) {
+        throw new Error('Você não pode deletar seu último personagem. Crie outro personagem antes de deletar este.');
+      }
+      
       const { error } = await supabase.from('characters').delete().eq('id', id);
       if (error) throw error;
     },

@@ -11,9 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Star, Trash2, Plus, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const { user, userRole, signOut } = useAuth();
+  const { toast } = useToast();
   const {
     profile,
     characters,
@@ -39,9 +41,12 @@ export default function Profile() {
   };
 
   const handleRemoveCharacter = (characterId: string) => {
-    const char = characters?.find((c) => c.id === characterId);
-    if (char?.id === profile?.active_character_id && characters && characters.length > 1) {
-      // Cannot remove active character
+    if (characters && characters.length === 1) {
+      toast({
+        title: "Cannot delete character",
+        description: "You must have at least one character. Create a new character before deleting this one.",
+        variant: "destructive",
+      });
       return;
     }
     deleteCharacter.mutate(characterId);

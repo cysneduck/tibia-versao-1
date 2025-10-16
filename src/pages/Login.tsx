@@ -36,18 +36,31 @@ export default function Login() {
         });
         setIsSignUp(false);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) throw error;
 
+        // Check if user needs onboarding
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarding_completed, first_login')
+          .eq('id', data.user.id)
+          .single();
+
+        const needsOnboarding = profile?.first_login === true || profile?.onboarding_completed === false;
+
         toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
+          title: needsOnboarding ? "Welcome!" : "Welcome back!",
+          description: needsOnboarding 
+            ? "Let's set up your account" 
+            : "You have successfully signed in.",
         });
-        navigate("/dashboard");
+
+        // Redirect based on onboarding status
+        navigate(needsOnboarding ? "/onboarding" : "/dashboard");
       }
     } catch (error: any) {
       toast({
