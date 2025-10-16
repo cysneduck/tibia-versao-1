@@ -33,6 +33,10 @@ interface RespawnCardProps {
   onLeaveQueue?: () => void;
   queueEntries?: QueueEntry[];
   userId?: string;
+  userHasPriority?: boolean;
+  priorityExpiresAt?: string | null;
+  someoneElseHasPriority?: boolean;
+  priorityTimeRemaining?: string;
 }
 
 export const RespawnCard = ({ 
@@ -53,7 +57,11 @@ export const RespawnCard = ({
   onJoinQueue,
   onLeaveQueue,
   queueEntries = [],
-  userId
+  userId,
+  userHasPriority = false,
+  priorityExpiresAt,
+  someoneElseHasPriority = false,
+  priorityTimeRemaining
 }: RespawnCardProps) => {
   const [queueModalOpen, setQueueModalOpen] = useState(false);
   return (
@@ -135,11 +143,35 @@ export const RespawnCard = ({
           </>
         ) : (
           <>
+            {userHasPriority && priorityExpiresAt && (
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mb-2">
+                <p className="text-sm font-semibold text-green-600 dark:text-green-400 mb-1">
+                  🎯 You have priority!
+                </p>
+                <CountdownTimer expiresAt={priorityExpiresAt} compact />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Claim now before time runs out
+                </p>
+              </div>
+            )}
+            
+            {someoneElseHasPriority && priorityTimeRemaining && (
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mb-2">
+                <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 mb-1">
+                  ⏳ Someone has priority
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {priorityTimeRemaining} remaining
+                </p>
+              </div>
+            )}
+            
             <Button 
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground glow-cyan font-semibold"
               onClick={onClaimClick}
+              disabled={someoneElseHasPriority && !userHasPriority}
             >
-              Claim Respawn
+              {someoneElseHasPriority && !userHasPriority ? 'Someone has priority' : 'Claim Respawn'}
             </Button>
             {queueCount > 0 && (
               <div 

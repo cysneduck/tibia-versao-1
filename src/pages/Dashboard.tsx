@@ -119,6 +119,24 @@ export default function Dashboard() {
                     ? queueEntries.findIndex(q => q.user_id === user?.id) + 1 
                     : null;
                   
+                  // Check for priority
+                  const priorityEntry = queueEntries.find(q => 
+                    q.priority_expires_at && new Date(q.priority_expires_at) > new Date()
+                  );
+                  const userHasPriority = priorityEntry?.user_id === user?.id;
+                  const someoneElseHasPriority = priorityEntry && priorityEntry.user_id !== user?.id;
+                  
+                  // Calculate priority time remaining
+                  let priorityTimeRemaining = '';
+                  if (priorityEntry) {
+                    const expiresAt = new Date(priorityEntry.priority_expires_at!);
+                    const now = new Date();
+                    const diffMs = expiresAt.getTime() - now.getTime();
+                    const minutes = Math.floor(diffMs / 60000);
+                    const seconds = Math.floor((diffMs % 60000) / 1000);
+                    priorityTimeRemaining = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                  }
+                  
                   return {
                     code: r.code,
                     name: r.name,
@@ -134,6 +152,10 @@ export default function Dashboard() {
                     queuePosition,
                     nextInQueue: queueEntries[0]?.character_name,
                     queueEntries: queueEntries,
+                    userHasPriority,
+                    priorityExpiresAt: userHasPriority ? priorityEntry?.priority_expires_at : null,
+                    someoneElseHasPriority,
+                    priorityTimeRemaining: someoneElseHasPriority ? priorityTimeRemaining : '',
                   };
                 })}
                 userType={userRole as 'guild' | 'neutro'}

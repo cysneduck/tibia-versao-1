@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { NotificationPanel } from "./NotificationPanel";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
@@ -11,6 +13,7 @@ interface HeaderProps {
 
 export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -38,6 +41,7 @@ export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) 
                   {userType === "guild" ? "Guild Member" : "Neutro"}
                 </Badge>
               </div>
+              {user && <NotificationPanel userId={user.id} />}
               <Button 
                 variant="outline" 
                 size="icon" 

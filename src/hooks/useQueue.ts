@@ -3,6 +3,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
 
+interface QueueEntry {
+  id: string;
+  respawn_id: string;
+  user_id: string;
+  character_id: string;
+  character_name: string;
+  joined_at: string;
+  notified: boolean | null;
+  priority_expires_at: string | null;
+  priority_given_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 export const useQueue = (userId: string | undefined) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -15,7 +29,7 @@ export const useQueue = (userId: string | undefined) => {
         .select('*')
         .order('joined_at', { ascending: true });
       if (error) throw error;
-      return data;
+      return data as QueueEntry[];
     },
   });
 
@@ -80,6 +94,8 @@ export const useQueue = (userId: string | undefined) => {
 
   // Subscribe to real-time queue updates
   useEffect(() => {
+    if (!userId) return;
+
     const channel = supabase
       .channel('queue-changes')
       .on(
@@ -91,15 +107,21 @@ export const useQueue = (userId: string | undefined) => {
         },
         (payload) => {
           queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
+          queryClient.invalidateQueries({ queryKey: ['respawns'] });
           
-          // Check if user was notified
+          // Check if user got priority
           if (payload.eventType === 'UPDATE' && 
-              payload.new.notified === true && 
               payload.new.user_id === userId &&
-              payload.old.notified === false) {
+              payload.new.priority_expires_at && 
+              !payload.old.priority_expires_at) {
+            
+            const expiresAt = new Date(payload.new.priority_expires_at);
+            const now = new Date();
+            const minutesLeft = Math.floor((expiresAt.getTime() - now.getTime()) / 60000);
+            
             toast({
               title: "It's your turn!",
-              description: `The respawn you were waiting for is now available. You can claim it now.`,
+              description: `You have ${minutesLeft} minutes to claim this respawn!`,
               duration: 10000,
             });
           }

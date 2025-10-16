@@ -101,6 +101,50 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          respawn_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          respawn_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          respawn_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_respawn_id_fkey"
+            columns: ["respawn_id"]
+            isOneToOne: false
+            referencedRelation: "respawns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active_character_id: string | null
@@ -147,6 +191,8 @@ export type Database = {
           id: string
           joined_at: string
           notified: boolean | null
+          priority_expires_at: string | null
+          priority_given_at: string | null
           respawn_id: string
           updated_at: string | null
           user_id: string
@@ -158,6 +204,8 @@ export type Database = {
           id?: string
           joined_at?: string
           notified?: boolean | null
+          priority_expires_at?: string | null
+          priority_given_at?: string | null
           respawn_id: string
           updated_at?: string | null
           user_id: string
@@ -169,6 +217,8 @@ export type Database = {
           id?: string
           joined_at?: string
           notified?: boolean | null
+          priority_expires_at?: string | null
+          priority_given_at?: string | null
           respawn_id?: string
           updated_at?: string | null
           user_id?: string
@@ -274,9 +324,17 @@ export type Database = {
         Args: { p_character_id: string; p_respawn_id: string }
         Returns: Json
       }
+      cleanup_expired_priorities: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       ensure_user_data: {
         Args: { p_user_id: string }
         Returns: undefined
+      }
+      handle_expired_claims: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       has_role: {
         Args: {
