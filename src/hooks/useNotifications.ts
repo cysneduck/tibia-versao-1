@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDesktopNotifications, NotificationPriority } from '@/hooks/useDesktopNotifications';
 import { NotificationSound } from '@/utils/notificationSounds';
+import { TabNotification } from '@/utils/tabNotification';
 
 interface Notification {
   id: string;
@@ -21,6 +22,7 @@ export const useNotifications = (userId: string | undefined, desktopNotification
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { hasPermission, showNotification } = useDesktopNotifications();
+  const [urgentClaim, setUrgentClaim] = useState<Notification | null>(null);
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
@@ -101,7 +103,7 @@ export const useNotifications = (userId: string | undefined, desktopNotification
           
           // Show desktop notification if enabled and permission granted
           if (desktopNotificationsEnabled && hasPermission) {
-            showNotification({
+            const notificationOptions: any = {
               title: notification.title,
               body: notification.message,
               priority,
@@ -112,7 +114,27 @@ export const useNotifications = (userId: string | undefined, desktopNotification
                   window.location.href = '/';
                 }
               },
-            });
+            };
+
+            // Enhance high-priority claim_ready notifications
+            if (notification.type === 'claim_ready') {
+              notificationOptions.requireInteraction = true; // Stays until clicked
+              notificationOptions.renotify = true; // Re-alerts if duplicate
+              notificationOptions.image = '/pwa-512x512.png';
+            }
+
+            showNotification(notificationOptions);
+          }
+
+          // Handle urgent claim modal and tab notifications
+          if (notification.type === 'claim_ready') {
+            // Blink tab title for urgent attention
+            TabNotification.blink();
+            
+            // Show urgent modal if tab is visible
+            if (document.visibilityState === 'visible') {
+              setUrgentClaim(notification);
+            }
           }
         }
       )
@@ -123,6 +145,16 @@ export const useNotifications = (userId: string | undefined, desktopNotification
     };
   }, [queryClient, toast, userId, desktopNotificationsEnabled, hasPermission, showNotification]);
 
+  // Update tab badge with unread count
+  useEffect(() => {
+    const unread = notifications?.filter(n => !n.is_read).length || 0;
+    TabNotification.setUnread(unread);
+
+    return () => {
+      TabNotification.reset();
+    };
+  }, [notifications]);
+
   const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
 
   return {
@@ -131,5 +163,7 @@ export const useNotifications = (userId: string | undefined, desktopNotification
     isLoading,
     markAsRead,
     deleteNotification,
+    urgentClaim,
+    setUrgentClaim,
   };
 };

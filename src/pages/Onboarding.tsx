@@ -6,17 +6,20 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Clock, Shield, UserPlus, CheckCircle2 } from "lucide-react";
+import { Clock, Shield, UserPlus, CheckCircle2, Bell, Volume2, Smartphone } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
 import { AuthLayout } from "@/components/AuthLayout";
+import { useDesktopNotifications } from "@/hooks/useDesktopNotifications";
+import { NotificationSound } from "@/utils/notificationSounds";
 
 const STEPS = [
   { id: 1, title: "Alterar Senha", icon: Shield },
   { id: 2, title: "Criar Personagem", icon: UserPlus },
   { id: 3, title: "Informações", icon: Clock },
+  { id: 4, title: "Notificações", icon: Bell },
 ];
 
 export default function Onboarding() {
@@ -24,7 +27,8 @@ export default function Onboarding() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { changePassword, markPasswordChanged, completeOnboarding } = useOnboarding(user?.id);
-  const { addCharacter } = useProfile(user?.id);
+  const { addCharacter, updateProfile } = useProfile(user?.id);
+  const { requestPermission, showNotification, hasPermission } = useDesktopNotifications();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -35,6 +39,9 @@ export default function Onboarding() {
 
   // Step 2: Character Creation
   const [charName, setCharName] = useState("");
+  
+  // Step 4: Notification Permission
+  const [notificationDecision, setNotificationDecision] = useState<boolean | null>(null);
 
   const validatePassword = (password: string): { valid: boolean; error?: string } => {
     if (password === '123123') {
@@ -115,6 +122,61 @@ export default function Onboarding() {
         title: "Erro ao criar personagem",
         description: error.message,
         variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnableNotifications = async () => {
+    setLoading(true);
+    try {
+      const result = await requestPermission();
+      
+      if (result === 'granted') {
+        // Update profile to enable desktop notifications
+        await updateProfile.mutateAsync({ desktop_notifications: true });
+        
+        // Show success toast
+        toast({ 
+          title: "✅ Notificações ativadas!", 
+          description: "Você receberá alertas importantes sobre respawns" 
+        });
+        
+        // Play test sound
+        NotificationSound.play('high');
+        
+        // Show test notification
+        showNotification({
+          title: "🎉 Tudo pronto!",
+          body: "Você receberá notificações como esta quando for sua vez de clamar",
+          priority: 'high'
+        });
+        
+        setNotificationDecision(true);
+      } else {
+        setNotificationDecision(false);
+        toast({
+          title: "Notificações não ativadas",
+          description: "Você pode ativar depois nas configurações",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error enabling notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSkipNotifications = async () => {
+    setLoading(true);
+    try {
+      await updateProfile.mutateAsync({ desktop_notifications: false });
+      setNotificationDecision(false);
+      toast({
+        title: "Notificações desativadas",
+        description: "Você pode ativar depois nas configurações do perfil",
       });
     } finally {
       setLoading(false);
@@ -322,9 +384,101 @@ export default function Onboarding() {
                   </p>
                 </div>
 
-                <Button onClick={handleComplete} className="w-full" disabled={loading}>
-                  {loading ? "Finalizando..." : "Entendido, Começar!"}
+                <Button onClick={() => setCurrentStep(4)} className="w-full">
+                  Continuar
                 </Button>
+              </CardContent>
+            </>
+          )}
+
+          {currentStep === 4 && (
+            <>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-primary" />
+                  Ative as Notificações
+                </CardTitle>
+                <CardDescription>
+                  Receba alertas quando for sua vez de clamar um respawn
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Mock notification preview */}
+                <div className="p-4 rounded-lg border-2 border-primary/30 bg-primary/5 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-md bg-primary/20">
+                      <Bell className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground">🔥 É sua vez de clamar!</h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        POI-3 Demon está disponível agora. Você tem prioridade!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Benefits list */}
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Volume2 className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Som de alerta</p>
+                      <p className="text-xs text-muted-foreground">Mesmo com o navegador minimizado</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <Smartphone className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Notificações desktop</p>
+                      <p className="text-xs text-muted-foreground">Alertas visuais na sua área de trabalho</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <Clock className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Nunca perca sua vez</p>
+                      <p className="text-xs text-muted-foreground">Saiba exatamente quando clamar</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg bg-muted/30">
+                  <p className="text-sm text-muted-foreground">
+                    💡 <span className="font-medium text-foreground">Dica:</span> As notificações são essenciais para não perder claims. Você pode desativar depois nas configurações.
+                  </p>
+                </div>
+
+                {/* Action buttons */}
+                <div className="space-y-3">
+                  {!hasPermission && notificationDecision === null && (
+                    <>
+                      <Button 
+                        onClick={handleEnableNotifications}
+                        className="w-full"
+                        disabled={loading}
+                      >
+                        {loading ? "Ativando..." : "🔔 Ativar Notificações"}
+                      </Button>
+                      <Button 
+                        onClick={handleSkipNotifications}
+                        variant="ghost"
+                        className="w-full"
+                        disabled={loading}
+                      >
+                        Talvez mais tarde
+                      </Button>
+                    </>
+                  )}
+                  
+                  {(hasPermission || notificationDecision !== null) && (
+                    <Button onClick={handleComplete} className="w-full" disabled={loading}>
+                      {loading ? "Finalizando..." : "Começar a usar o sistema! 🚀"}
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </>
           )}

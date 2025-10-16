@@ -5,11 +5,13 @@ import { CitySection } from "@/components/CitySection";
 import { ClaimDialog } from "@/components/ClaimDialog";
 import { ReleaseDialog } from "@/components/ReleaseDialog";
 import { NotificationPermissionBanner } from "@/components/NotificationPermissionBanner";
+import { UrgentClaimModal } from "@/components/UrgentClaimModal";
 import { useRespawns } from "@/hooks/useRespawns";
 import { useClaims } from "@/hooks/useClaims";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueue } from "@/hooks/useQueue";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export default function Dashboard() {
   const { user, userRole } = useAuth();
@@ -17,6 +19,7 @@ export default function Dashboard() {
   const { claimRespawn, releaseClaim } = useClaims(user?.id);
   const { profile, characters } = useProfile(user?.id);
   const { queueData, joinQueue, leaveQueue } = useQueue(user?.id);
+  const { urgentClaim, setUrgentClaim } = useNotifications(user?.id, profile?.desktop_notifications ?? true);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("all");
@@ -206,6 +209,16 @@ export default function Dashboard() {
           respawnName={selectedRespawn.name}
           onConfirm={handleConfirmRelease}
           isLoading={releaseClaim.isPending}
+        />
+      )}
+
+      {urgentClaim && urgentClaim.respawn_id && urgentClaim.expires_at && (
+        <UrgentClaimModal
+          open={!!urgentClaim}
+          onOpenChange={(open) => !open && setUrgentClaim(null)}
+          respawnCode={urgentClaim.title.split(' - ')[0] || 'Respawn'}
+          respawnName={urgentClaim.title.split(' - ')[1] || 'Disponível'}
+          expiresAt={urgentClaim.expires_at}
         />
       )}
     </DashboardLayout>
