@@ -159,7 +159,7 @@ export const useProfile = (userId: string | undefined) => {
   });
 
   const updateProfile = useMutation({
-    mutationFn: async (updates: { email_notifications?: boolean; claim_reminders?: boolean }) => {
+    mutationFn: async (updates: { email_notifications?: boolean; claim_reminders?: boolean; desktop_notifications?: boolean }) => {
       if (!userId) throw new Error('No user ID');
       const { data, error } = await supabase
         .from('profiles')

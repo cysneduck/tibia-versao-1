@@ -4,6 +4,7 @@ import { FilterBar } from "@/components/FilterBar";
 import { CitySection } from "@/components/CitySection";
 import { ClaimDialog } from "@/components/ClaimDialog";
 import { ReleaseDialog } from "@/components/ReleaseDialog";
+import { NotificationPermissionBanner } from "@/components/NotificationPermissionBanner";
 import { useRespawns } from "@/hooks/useRespawns";
 import { useClaims } from "@/hooks/useClaims";
 import { useProfile } from "@/hooks/useProfile";
@@ -91,6 +92,8 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-foreground mb-2">Respawns</h1>
           <p className="text-muted-foreground">Manage and track respawn claims</p>
         </div>
+
+        <NotificationPermissionBanner />
 
         <FilterBar
           searchQuery={searchQuery}

@@ -36,6 +36,10 @@ export default function Profile() {
     updateProfile.mutate({ claim_reminders: value });
   };
 
+  const handleSaveDesktopNotifications = (value: boolean) => {
+    updateProfile.mutate({ desktop_notifications: value });
+  };
+
   const handleSetActive = (characterId: string) => {
     setActiveCharacter.mutate(characterId);
   };
@@ -275,6 +279,19 @@ export default function Profile() {
             <CardDescription>Manage your notification preferences</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label>Desktop Notifications</Label>
+                <p className="text-sm text-muted-foreground">
+                  Show system notifications when your respawn status changes (even when app is minimized)
+                </p>
+              </div>
+              <Switch
+                checked={profile?.desktop_notifications ?? true}
+                onCheckedChange={(value) => handleSaveDesktopNotifications(value)}
+              />
+            </div>
+            
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <Label>Claim Reminders</Label>

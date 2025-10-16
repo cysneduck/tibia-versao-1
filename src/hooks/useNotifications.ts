@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
+import { useDesktopNotifications, NotificationPriority } from '@/hooks/useDesktopNotifications';
 
 interface Notification {
   id: string;
@@ -15,9 +16,10 @@ interface Notification {
   expires_at: string | null;
 }
 
-export const useNotifications = (userId: string | undefined) => {
+export const useNotifications = (userId: string | undefined, desktopNotificationsEnabled: boolean = true) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { hasPermission, showNotification } = useDesktopNotifications();
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
@@ -78,12 +80,36 @@ export const useNotifications = (userId: string | undefined) => {
           
           const notification = payload.new as Notification;
           
-          // Show toast for new notifications
+          // Determine priority based on notification type
+          let priority: NotificationPriority = 'normal';
+          if (notification.type === 'claim_ready') {
+            priority = 'high';
+          } else if (notification.type === 'claim_expiring') {
+            priority = 'medium';
+          }
+          
+          // Show in-app toast
           toast({
             title: notification.title,
             description: notification.message,
             duration: notification.type === 'claim_ready' ? 10000 : 5000,
           });
+          
+          // Show desktop notification if enabled and permission granted
+          if (desktopNotificationsEnabled && hasPermission) {
+            showNotification({
+              title: notification.title,
+              body: notification.message,
+              priority,
+              tag: `respawn-${notification.respawn_id}`,
+              onClick: () => {
+                // Focus window when notification is clicked
+                if (notification.respawn_id) {
+                  window.location.href = '/';
+                }
+              },
+            });
+          }
         }
       )
       .subscribe();

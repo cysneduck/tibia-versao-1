@@ -150,6 +150,7 @@ export type Database = {
           active_character_id: string | null
           claim_reminders: boolean | null
           created_at: string | null
+          desktop_notifications: boolean | null
           email: string
           email_notifications: boolean | null
           first_login: boolean | null
@@ -162,6 +163,7 @@ export type Database = {
           active_character_id?: string | null
           claim_reminders?: boolean | null
           created_at?: string | null
+          desktop_notifications?: boolean | null
           email: string
           email_notifications?: boolean | null
           first_login?: boolean | null
@@ -174,6 +176,7 @@ export type Database = {
           active_character_id?: string | null
           claim_reminders?: boolean | null
           created_at?: string | null
+          desktop_notifications?: boolean | null
           email?: string
           email_notifications?: boolean | null
           first_login?: boolean | null
