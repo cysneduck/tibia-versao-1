@@ -25,7 +25,7 @@ export const useRespawns = () => {
         .from('respawns')
         .select('*')
         .order('city', { ascending: true })
-        .order('name', { ascending: true });
+        .order('code', { ascending: true });
 
       if (respawnsError) throw respawnsError;
 
