@@ -204,6 +204,7 @@ export default function Admin() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Active Character</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Current Role</TableHead>
                   <TableHead>Change Role</TableHead>
@@ -212,6 +213,9 @@ export default function Admin() {
               <TableBody>
                 {users?.map((user: any) => (
                   <TableRow key={user.id}>
+                    <TableCell className="font-medium text-muted-foreground">
+                      {user.activeCharacterName || 'No character'}
+                    </TableCell>
                     <TableCell className="font-medium">{user.email}</TableCell>
                     <TableCell>
                       <Badge

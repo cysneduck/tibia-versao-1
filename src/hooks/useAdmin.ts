@@ -25,12 +25,24 @@ export const useAdmin = () => {
       
       if (rolesError) throw rolesError;
 
-      // Map roles to users
+      // Fetch all characters to map active character names
+      const { data: charactersData, error: charactersError } = await supabase
+        .from('characters')
+        .select('id, name, user_id');
+      
+      if (charactersError) throw charactersError;
+
+      // Map roles and active character names to users
       return profilesData.map((user) => {
         const userRole = rolesData.find((r) => r.user_id === user.id);
+        const activeCharacter = charactersData.find(
+          (char) => char.id === user.active_character_id
+        );
+        
         return {
           ...user,
           role: userRole?.role || 'neutro',
+          activeCharacterName: activeCharacter?.name || 'No character',
         };
       });
     },
