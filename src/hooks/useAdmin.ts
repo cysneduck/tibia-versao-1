@@ -6,7 +6,7 @@ import { useAuth } from './useAuth';
 export const useAdmin = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { isMasterAdmin } = useAuth();
+  const { isMasterAdmin, user } = useAuth();
 
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -89,8 +89,12 @@ export const useAdmin = () => {
         .insert([{ user_id: userId, role: newRole as 'admin' | 'guild' | 'neutro' | 'master_admin' }]);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      // If the role change affects the current user's session, force a page reload
+      if (variables.userId === user?.id) {
+        window.location.reload();
+      }
       toast({ title: 'User role updated successfully' });
     },
     onError: (error: Error) => {

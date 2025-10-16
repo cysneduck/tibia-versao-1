@@ -80,11 +80,6 @@ export const QueueModal = ({
                         <span className="font-medium text-foreground">
                           {entry.character_name}
                         </span>
-                        {isCurrentUser && (
-                          <Badge variant="secondary" className="text-xs">
-                            You
-                          </Badge>
-                        )}
                         {isNext && (
                           <Badge className="text-xs bg-primary/20 text-primary border-primary">
                             <Trophy className="h-3 w-3 mr-1" />
