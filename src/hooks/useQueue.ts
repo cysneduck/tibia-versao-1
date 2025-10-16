@@ -137,8 +137,9 @@ export const useQueue = (userId: string | undefined) => {
         variant: 'destructive',
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
+    onSuccess: async () => {
+      // Immediate refetch to get next person's priority update
+      await queryClient.refetchQueries({ queryKey: ['respawn-queue'] });
       toast({
         title: 'Left queue successfully',
         description: 'You have been removed from the queue.',
@@ -146,34 +147,34 @@ export const useQueue = (userId: string | undefined) => {
     },
   });
 
-  // Subscribe to priority notifications only
+  // Subscribe to all queue changes for instant updates
   useEffect(() => {
-    if (!userId) return;
-
     const channel = supabase
-      .channel('queue-priority-notifications')
+      .channel('queue-realtime-updates')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'respawn_queue',
-          filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
-          queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
+        async (payload) => {
+          // Refetch immediately for instant updates across all users
+          await queryClient.refetchQueries({ queryKey: ['respawn-queue'] });
           
-          // Check if user got priority
-          if (payload.new.priority_expires_at && !payload.old.priority_expires_at) {
-            const expiresAt = new Date(payload.new.priority_expires_at);
-            const now = new Date();
-            const minutesLeft = Math.floor((expiresAt.getTime() - now.getTime()) / 60000);
-            
-            toast({
-              title: "It's your turn!",
-              description: `You have ${minutesLeft} minutes to claim this respawn!`,
-              duration: 10000,
-            });
+          // Check if current user got priority
+          if (userId && payload.eventType === 'UPDATE' && payload.new.user_id === userId) {
+            if (payload.new.priority_expires_at && !payload.old.priority_expires_at) {
+              const expiresAt = new Date(payload.new.priority_expires_at);
+              const now = new Date();
+              const minutesLeft = Math.floor((expiresAt.getTime() - now.getTime()) / 60000);
+              
+              toast({
+                title: "It's your turn!",
+                description: `You have ${minutesLeft} minutes to claim this respawn!`,
+                duration: 10000,
+              });
+            }
           }
         }
       )

@@ -34,16 +34,22 @@ export const useClaims = (userId: string | undefined) => {
       
       const result = data as any;
       if (!result.success) throw new Error(result.error);
-      return { ...result, respawnId };
+      return { ...result, respawnId, characterId };
     },
-    onMutate: async ({ respawnId }) => {
+    onMutate: async ({ respawnId, characterId }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['respawn-queue'] });
       await queryClient.cancelQueries({ queryKey: ['respawns'] });
+      await queryClient.cancelQueries({ queryKey: ['user-claims', userId] });
       
       // Snapshot previous values
       const previousQueue = queryClient.getQueryData(['respawn-queue']);
       const previousRespawns = queryClient.getQueryData(['respawns']);
+      const previousClaims = queryClient.getQueryData(['user-claims', userId]);
+      
+      // Get character name for optimistic update
+      const characters = queryClient.getQueryData(['characters', userId]) as any[];
+      const character = characters?.find((c: any) => c.id === characterId);
       
       // Optimistically update queue (remove user's entry)
       queryClient.setQueryData(['respawn-queue'], (old: any) => {
@@ -53,8 +59,28 @@ export const useClaims = (userId: string | undefined) => {
         );
       });
       
+      // Optimistically update respawns (add claim)
+      queryClient.setQueryData(['respawns'], (old: any) => {
+        if (!old) return old;
+        return old.map((respawn: any) => {
+          if (respawn.id === respawnId) {
+            return {
+              ...respawn,
+              claim: {
+                id: 'temp-' + Date.now(),
+                user_id: userId,
+                character_name: character?.name || 'Your Character',
+                expires_at: new Date(Date.now() + 75 * 60 * 1000).toISOString(), // 1h 15min
+                claimed_at: new Date().toISOString(),
+              },
+            };
+          }
+          return respawn;
+        });
+      });
+      
       // Return context for rollback
-      return { previousQueue, previousRespawns };
+      return { previousQueue, previousRespawns, previousClaims };
     },
     onError: (error: Error, variables, context: any) => {
       // Rollback on error
@@ -64,6 +90,9 @@ export const useClaims = (userId: string | undefined) => {
       if (context?.previousRespawns) {
         queryClient.setQueryData(['respawns'], context.previousRespawns);
       }
+      if (context?.previousClaims) {
+        queryClient.setQueryData(['user-claims', userId], context.previousClaims);
+      }
       
       toast({
         title: 'Error claiming respawn',
@@ -71,11 +100,11 @@ export const useClaims = (userId: string | undefined) => {
         variant: 'destructive',
       });
     },
-    onSuccess: () => {
-      // Refetch to reconcile with server state
-      queryClient.invalidateQueries({ queryKey: ['respawns'] });
-      queryClient.invalidateQueries({ queryKey: ['user-claims', userId] });
-      queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
+    onSuccess: async () => {
+      // Refetch immediately to reconcile with server state
+      await queryClient.refetchQueries({ queryKey: ['respawns'] });
+      await queryClient.refetchQueries({ queryKey: ['user-claims', userId] });
+      await queryClient.refetchQueries({ queryKey: ['respawn-queue'] });
       
       toast({
         title: 'Respawn claimed successfully!',
@@ -100,10 +129,12 @@ export const useClaims = (userId: string | undefined) => {
       // Cancel refetches
       await queryClient.cancelQueries({ queryKey: ['respawns'] });
       await queryClient.cancelQueries({ queryKey: ['user-claims', userId] });
+      await queryClient.cancelQueries({ queryKey: ['respawn-queue'] });
       
       // Snapshot previous state
       const previousRespawns = queryClient.getQueryData(['respawns']);
       const previousClaims = queryClient.getQueryData(['user-claims', userId]);
+      const previousQueue = queryClient.getQueryData(['respawn-queue']);
       
       // Optimistically remove claim from respawns
       queryClient.setQueryData(['respawns'], (old: any) => {
@@ -122,7 +153,7 @@ export const useClaims = (userId: string | undefined) => {
         return old.filter((claim: any) => claim.id !== claimId);
       });
       
-      return { previousRespawns, previousClaims };
+      return { previousRespawns, previousClaims, previousQueue };
     },
     onError: (error: Error, variables, context: any) => {
       // Rollback on error
@@ -132,6 +163,9 @@ export const useClaims = (userId: string | undefined) => {
       if (context?.previousClaims) {
         queryClient.setQueryData(['user-claims', userId], context.previousClaims);
       }
+      if (context?.previousQueue) {
+        queryClient.setQueryData(['respawn-queue'], context.previousQueue);
+      }
       
       toast({
         title: 'Error releasing claim',
@@ -139,10 +173,12 @@ export const useClaims = (userId: string | undefined) => {
         variant: 'destructive',
       });
     },
-    onSuccess: () => {
-      // Background refetch to reconcile
-      queryClient.invalidateQueries({ queryKey: ['respawns'] });
-      queryClient.invalidateQueries({ queryKey: ['user-claims', userId] });
+    onSuccess: async () => {
+      // Immediate refetch to reconcile with server (includes next person getting priority)
+      await queryClient.refetchQueries({ queryKey: ['respawns'] });
+      await queryClient.refetchQueries({ queryKey: ['user-claims', userId] });
+      await queryClient.refetchQueries({ queryKey: ['respawn-queue'] });
+      
       toast({
         title: 'Claim released successfully',
         description: 'The respawn is now available for others to claim.',

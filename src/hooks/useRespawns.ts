@@ -59,7 +59,7 @@ export const useRespawns = () => {
     },
   });
 
-  // Subscribe to real-time updates for claims AND queue
+  // Subscribe to real-time updates for claims AND queue - instant updates without refetch
   useEffect(() => {
     const channel = supabase
       .channel('respawns-and-queue-changes')
@@ -70,9 +70,9 @@ export const useRespawns = () => {
           schema: 'public',
           table: 'claims',
         },
-        () => {
-          // Refetch respawns when claims change
-          refetch();
+        async (payload) => {
+          // Immediately refetch to get latest data - this is fast via realtime
+          await refetch();
         }
       )
       .on(
@@ -82,9 +82,9 @@ export const useRespawns = () => {
           schema: 'public',
           table: 'respawn_queue',
         },
-        () => {
-          // Refetch respawns when queue changes
-          refetch();
+        async (payload) => {
+          // Immediately refetch to get latest data - this is fast via realtime
+          await refetch();
         }
       )
       .subscribe();
