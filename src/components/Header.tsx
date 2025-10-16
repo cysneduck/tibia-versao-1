@@ -20,7 +20,7 @@ export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) 
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-primary glow-cyan tracking-wider">
-            Resonance Remain
+            Claimed System
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Professional respawn coordination</p>
         </div>

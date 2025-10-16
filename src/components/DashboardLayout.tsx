@@ -20,7 +20,7 @@ export const DashboardLayout = ({ children, isAdmin = false }: DashboardLayoutPr
     { icon: Home, label: "Respawns", path: "/dashboard" },
     { icon: FileSpreadsheet, label: "Planilhados", path: "/planilhados" },
     { icon: User, label: "Profile", path: "/profile" },
-    ...(isAdmin ? [{ icon: Settings, label: "Admin", path: "/admin" }] : []),
+    ...((userRole === 'admin' || userRole === 'master_admin') ? [{ icon: Settings, label: "Admin", path: "/admin" }] : []),
   ];
 
   const activeCharacter = characters?.find(char => char.id === profile?.active_character_id);
