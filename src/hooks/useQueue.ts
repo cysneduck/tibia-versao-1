@@ -75,19 +75,41 @@ export const useQueue = (userId: string | undefined) => {
       if (!result.success) throw new Error(result.error);
       return result;
     },
+    onMutate: async (respawnId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['respawn-queue'] });
+      
+      // Snapshot previous value
+      const previousQueue = queryClient.getQueryData(['respawn-queue']);
+      
+      // Optimistically remove from queue
+      queryClient.setQueryData(['respawn-queue'], (old: any) => {
+        if (!old) return old;
+        return old.filter((entry: any) => 
+          !(entry.respawn_id === respawnId && entry.user_id === userId)
+        );
+      });
+      
+      return { previousQueue };
+    },
+    onError: (error: Error, variables, context: any) => {
+      // Rollback on error
+      if (context?.previousQueue) {
+        queryClient.setQueryData(['respawn-queue'], context.previousQueue);
+      }
+      
+      toast({
+        title: 'Error leaving queue',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
       queryClient.invalidateQueries({ queryKey: ['respawns'] });
       toast({
         title: 'Left queue successfully',
         description: 'You have been removed from the queue.',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Error leaving queue',
-        description: error.message,
-        variant: 'destructive',
       });
     },
   });

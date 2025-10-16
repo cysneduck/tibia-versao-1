@@ -34,21 +34,52 @@ export const useClaims = (userId: string | undefined) => {
       
       const result = data as any;
       if (!result.success) throw new Error(result.error);
-      return result;
+      return { ...result, respawnId };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['respawns'] });
-      queryClient.invalidateQueries({ queryKey: ['user-claims', userId] });
-      toast({
-        title: 'Respawn claimed successfully!',
-        description: 'The respawn has been added to your claims.',
+    onMutate: async ({ respawnId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['respawn-queue'] });
+      await queryClient.cancelQueries({ queryKey: ['respawns'] });
+      
+      // Snapshot previous values
+      const previousQueue = queryClient.getQueryData(['respawn-queue']);
+      const previousRespawns = queryClient.getQueryData(['respawns']);
+      
+      // Optimistically update queue (remove user's entry)
+      queryClient.setQueryData(['respawn-queue'], (old: any) => {
+        if (!old) return old;
+        return old.filter((entry: any) => 
+          !(entry.respawn_id === respawnId && entry.user_id === userId)
+        );
       });
+      
+      // Return context for rollback
+      return { previousQueue, previousRespawns };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables, context: any) => {
+      // Rollback on error
+      if (context?.previousQueue) {
+        queryClient.setQueryData(['respawn-queue'], context.previousQueue);
+      }
+      if (context?.previousRespawns) {
+        queryClient.setQueryData(['respawns'], context.previousRespawns);
+      }
+      
       toast({
         title: 'Error claiming respawn',
         description: error.message,
         variant: 'destructive',
+      });
+    },
+    onSuccess: () => {
+      // Refetch to reconcile with server state
+      queryClient.invalidateQueries({ queryKey: ['respawns'] });
+      queryClient.invalidateQueries({ queryKey: ['user-claims', userId] });
+      queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
+      
+      toast({
+        title: 'Respawn claimed successfully!',
+        description: 'The respawn has been added to your claims.',
       });
     },
   });
