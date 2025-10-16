@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, Trash2, Plus } from "lucide-react";
+import { Star, Trash2, Plus, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 
 export default function Profile() {
-  const { user, userRole } = useAuth();
+  const { user, userRole, signOut } = useAuth();
   const {
     profile,
     characters,
@@ -239,6 +239,17 @@ export default function Profile() {
                 <p className="text-sm text-muted-foreground">{profile?.email}</p>
               </div>
             </div>
+
+            <Separator />
+
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={signOut}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
           </CardContent>
         </Card>
 
