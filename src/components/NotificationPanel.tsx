@@ -16,10 +16,11 @@ import { useNavigate } from "react-router-dom";
 
 interface NotificationPanelProps {
   userId: string;
+  desktopNotificationsEnabled?: boolean;
 }
 
-export const NotificationPanel = ({ userId }: NotificationPanelProps) => {
-  const { notifications, unreadCount, markAsRead, deleteNotification } = useNotifications(userId);
+export const NotificationPanel = ({ userId, desktopNotificationsEnabled = true }: NotificationPanelProps) => {
+  const { notifications, unreadCount, markAsRead, deleteNotification } = useNotifications(userId, desktopNotificationsEnabled);
   const navigate = useNavigate();
 
   const getNotificationColor = (type: string) => {

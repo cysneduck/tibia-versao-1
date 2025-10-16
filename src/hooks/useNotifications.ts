@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
 import { useDesktopNotifications, NotificationPriority } from '@/hooks/useDesktopNotifications';
+import { NotificationSound } from '@/utils/notificationSounds';
 
 interface Notification {
   id: string;
@@ -95,6 +96,9 @@ export const useNotifications = (userId: string | undefined, desktopNotification
             duration: notification.type === 'claim_ready' ? 10000 : 5000,
           });
           
+          // Play notification sound
+          NotificationSound.play(priority);
+          
           // Show desktop notification if enabled and permission granted
           if (desktopNotificationsEnabled && hasPermission) {
             showNotification({
@@ -117,7 +121,7 @@ export const useNotifications = (userId: string | undefined, desktopNotification
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, toast, userId]);
+  }, [queryClient, toast, userId, desktopNotificationsEnabled, hasPermission, showNotification]);
 
   const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
 

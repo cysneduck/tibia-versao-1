@@ -4,6 +4,7 @@ import { User, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { NotificationPanel } from "./NotificationPanel";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
@@ -14,6 +15,7 @@ interface HeaderProps {
 export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { profile } = useProfile(user?.id);
   
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -47,7 +49,7 @@ export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) 
                     : "Neutro"}
                 </Badge>
               </div>
-              {user && <NotificationPanel userId={user.id} />}
+              {user && <NotificationPanel userId={user.id} desktopNotificationsEnabled={profile?.desktop_notifications ?? true} />}
               <Button 
                 variant="outline" 
                 size="icon" 
