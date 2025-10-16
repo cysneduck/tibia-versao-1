@@ -96,19 +96,56 @@ export const useClaims = (userId: string | undefined) => {
       if (!result.success) throw new Error(result.error);
       return result;
     },
+    onMutate: async (claimId) => {
+      // Cancel refetches
+      await queryClient.cancelQueries({ queryKey: ['respawns'] });
+      await queryClient.cancelQueries({ queryKey: ['user-claims', userId] });
+      
+      // Snapshot previous state
+      const previousRespawns = queryClient.getQueryData(['respawns']);
+      const previousClaims = queryClient.getQueryData(['user-claims', userId]);
+      
+      // Optimistically remove claim from respawns
+      queryClient.setQueryData(['respawns'], (old: any) => {
+        if (!old) return old;
+        return old.map((respawn: any) => {
+          if (respawn.claim?.id === claimId) {
+            return { ...respawn, claim: null };
+          }
+          return respawn;
+        });
+      });
+      
+      // Optimistically remove from user claims
+      queryClient.setQueryData(['user-claims', userId], (old: any) => {
+        if (!old) return old;
+        return old.filter((claim: any) => claim.id !== claimId);
+      });
+      
+      return { previousRespawns, previousClaims };
+    },
+    onError: (error: Error, variables, context: any) => {
+      // Rollback on error
+      if (context?.previousRespawns) {
+        queryClient.setQueryData(['respawns'], context.previousRespawns);
+      }
+      if (context?.previousClaims) {
+        queryClient.setQueryData(['user-claims', userId], context.previousClaims);
+      }
+      
+      toast({
+        title: 'Error releasing claim',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
     onSuccess: () => {
+      // Background refetch to reconcile
       queryClient.invalidateQueries({ queryKey: ['respawns'] });
       queryClient.invalidateQueries({ queryKey: ['user-claims', userId] });
       toast({
         title: 'Claim released successfully',
         description: 'The respawn is now available for others to claim.',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Error releasing claim',
-        description: error.message,
-        variant: 'destructive',
       });
     },
   });

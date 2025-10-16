@@ -46,18 +46,52 @@ export const useQueue = (userId: string | undefined) => {
       if (!result.success) throw new Error(result.error);
       return result;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
-      toast({
-        title: 'Joined queue successfully!',
-        description: `You are position #${data.position} in the queue.`,
+    onMutate: async ({ respawnId, characterId }) => {
+      await queryClient.cancelQueries({ queryKey: ['respawn-queue'] });
+      
+      const previousQueue = queryClient.getQueryData(['respawn-queue']);
+      
+      // Optimistically add to queue
+      queryClient.setQueryData(['respawn-queue'], (old: any) => {
+        if (!old) return old;
+        
+        // Find character name from cache
+        const characters = queryClient.getQueryData(['characters', userId]) as any[];
+        const character = characters?.find((c: any) => c.id === characterId);
+        
+        return [...old, {
+          id: 'temp-' + Date.now(),
+          respawn_id: respawnId,
+          user_id: userId,
+          character_id: characterId,
+          character_name: character?.name || 'Loading...',
+          joined_at: new Date().toISOString(),
+          notified: false,
+          priority_expires_at: null,
+          priority_given_at: null,
+          created_at: null,
+          updated_at: null,
+        }];
       });
+      
+      return { previousQueue };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables, context: any) => {
+      if (context?.previousQueue) {
+        queryClient.setQueryData(['respawn-queue'], context.previousQueue);
+      }
       toast({
         title: 'Error joining queue',
         description: error.message,
         variant: 'destructive',
+      });
+    },
+    onSuccess: (data) => {
+      // Background refetch
+      queryClient.invalidateQueries({ queryKey: ['respawn-queue'] });
+      toast({
+        title: 'Joined queue successfully!',
+        description: `You are position #${data.position} in the queue.`,
       });
     },
   });
