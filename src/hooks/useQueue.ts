@@ -185,6 +185,33 @@ export const useQueue = (userId: string | undefined) => {
     };
   }, [queryClient, toast, userId]);
 
+  // Client-side priority expiration check - runs every second for instant removal
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.setQueryData(['respawn-queue'], (old: QueueEntry[] | undefined) => {
+        if (!old) return old;
+        
+        const now = new Date();
+        const filtered = old.filter(entry => {
+          // Remove entries with expired priority
+          if (entry.priority_expires_at) {
+            const expiresAt = new Date(entry.priority_expires_at);
+            if (expiresAt <= now) {
+              // Priority expired - remove from queue instantly
+              return false;
+            }
+          }
+          return true;
+        });
+        
+        // Only update if something changed
+        return filtered.length !== old.length ? filtered : old;
+      });
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, [queryClient]);
+
   return {
     queueData: queueData || [],
     isLoading,
