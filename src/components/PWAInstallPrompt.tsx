@@ -43,7 +43,7 @@ export const PWAInstallPrompt = () => {
         <div className="flex-1">
           <h3 className="font-semibold mb-1">Instalar Aplicativo</h3>
           <p className="text-sm text-muted-foreground mb-3">
-            Adicione Resonance Remain à sua tela inicial para acesso rápido e experiência offline
+            Adicione o app do Claimed System à sua tela inicial para acesso rápido e experiência offline
           </p>
           <div className="flex gap-2">
             <Button onClick={handleInstall} size="sm">
