@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, ExternalLink, Mail, Phone } from "lucide-react";
+import { Shield, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AuthLayout } from "@/components/AuthLayout";
@@ -13,15 +12,11 @@ import { AuthLayout } from "@/components/AuthLayout";
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,60 +51,6 @@ export default function Login() {
     } catch (error: any) {
       toast({
         title: "Sign in failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePhoneAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (!otpSent) {
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: phone,
-        });
-
-        if (error) throw error;
-
-        setOtpSent(true);
-        toast({
-          title: "OTP sent",
-          description: "Check your phone for the verification code.",
-        });
-      } else {
-        const { data, error } = await supabase.auth.verifyOtp({
-          phone: phone,
-          token: otp,
-          type: 'sms'
-        });
-
-        if (error) throw error;
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('onboarding_completed, first_login')
-          .eq('id', data.user.id)
-          .single();
-
-        const needsOnboarding = profile?.first_login === true || profile?.onboarding_completed === false;
-
-        toast({
-          title: needsOnboarding ? "Welcome!" : "Welcome back!",
-          description: needsOnboarding 
-            ? "Let's set up your account" 
-            : "You have successfully signed in.",
-        });
-
-        navigate(needsOnboarding ? "/onboarding" : "/dashboard");
-      }
-    } catch (error: any) {
-      toast({
-        title: otpSent ? "Verification failed" : "Sign in failed",
         description: error.message,
         variant: "destructive",
       });
@@ -215,118 +156,48 @@ export default function Login() {
               </CardContent>
             </form>
           ) : (
-            <CardContent className="space-y-4">
-              <Tabs value={authMethod} onValueChange={(v) => setAuthMethod(v as "email" | "phone")} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="email" className="gap-2">
-                    <Mail className="h-4 w-4" />
-                    Email
-                  </TabsTrigger>
-                  <TabsTrigger value="phone" className="gap-2">
-                    <Phone className="h-4 w-4" />
-                    Phone
-                  </TabsTrigger>
-                </TabsList>
+            <form onSubmit={handleAuth}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="knight@tibia.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
                 
-                <TabsContent value="email" className="space-y-4 mt-4">
-                  <form onSubmit={handleAuth} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="knight@tibia.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        disabled={loading}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        disabled={loading}
-                        minLength={6}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setIsForgotPassword(true)}
-                        className="text-sm text-primary hover:underline"
-                        disabled={loading}
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
-                    
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Loading..." : "Login"}
-                    </Button>
-                  </form>
-                </TabsContent>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPassword(true)}
+                    className="text-sm text-primary hover:underline"
+                    disabled={loading}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
                 
-                <TabsContent value="phone" className="space-y-4 mt-4">
-                  <form onSubmit={handlePhoneAuth} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+1234567890"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                        disabled={loading || otpSent}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Include country code (e.g., +1 for US)
-                      </p>
-                    </div>
-                    
-                    {otpSent && (
-                      <div className="space-y-2">
-                        <Label htmlFor="otp">Verification Code</Label>
-                        <Input
-                          id="otp"
-                          type="text"
-                          placeholder="123456"
-                          value={otp}
-                          onChange={(e) => setOtp(e.target.value)}
-                          required
-                          disabled={loading}
-                          maxLength={6}
-                        />
-                      </div>
-                    )}
-                    
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Loading..." : otpSent ? "Verify Code" : "Send Code"}
-                    </Button>
-                    
-                    {otpSent && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="w-full"
-                        onClick={() => {
-                          setOtpSent(false);
-                          setOtp("");
-                        }}
-                        disabled={loading}
-                      >
-                        ← Use different number
-                      </Button>
-                    )}
-                  </form>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Loading..." : "Login"}
+                </Button>
+              </CardContent>
+            </form>
           )}
         </Card>
 
