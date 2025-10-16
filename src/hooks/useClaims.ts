@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from './useAuth';
 
 export const useClaims = (userId: string | undefined) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { userRole } = useAuth();
 
   const { data: userClaims, isLoading } = useQuery({
     queryKey: ['user-claims', userId],
@@ -51,6 +53,11 @@ export const useClaims = (userId: string | undefined) => {
       const characters = queryClient.getQueryData(['characters', userId]) as any[];
       const character = characters?.find((c: any) => c.id === characterId);
       
+      // Calculate claim duration based on user role
+      // Guild, Admin, Master Admin: 2h 30min = 150 minutes
+      // Neutro: 1h 15min = 75 minutes
+      const claimDurationMinutes = ['guild', 'admin', 'master_admin'].includes(userRole || 'neutro') ? 150 : 75;
+      
       // Optimistically update queue (remove user's entry)
       queryClient.setQueryData(['respawn-queue'], (old: any) => {
         if (!old) return old;
@@ -70,7 +77,7 @@ export const useClaims = (userId: string | undefined) => {
                 id: 'temp-' + Date.now(),
                 user_id: userId,
                 character_name: character?.name || 'Your Character',
-                expires_at: new Date(Date.now() + 75 * 60 * 1000).toISOString(), // 1h 15min
+                expires_at: new Date(Date.now() + claimDurationMinutes * 60 * 1000).toISOString(),
                 claimed_at: new Date().toISOString(),
               },
             };
