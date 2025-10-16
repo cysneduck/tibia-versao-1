@@ -352,6 +352,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_or_master: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       is_master_admin: {
         Args: { _user_id: string }
         Returns: boolean
