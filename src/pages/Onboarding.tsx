@@ -40,17 +40,8 @@ export default function Onboarding() {
     if (password === '123123') {
       return { valid: false, error: 'Você não pode usar a senha temporária' };
     }
-    if (password.length < 8) {
-      return { valid: false, error: 'A senha deve ter pelo menos 8 caracteres' };
-    }
-    if (!/[A-Z]/.test(password)) {
-      return { valid: false, error: 'A senha deve conter pelo menos uma letra maiúscula' };
-    }
-    if (!/[a-z]/.test(password)) {
-      return { valid: false, error: 'A senha deve conter pelo menos uma letra minúscula' };
-    }
-    if (!/[0-9]/.test(password)) {
-      return { valid: false, error: 'A senha deve conter pelo menos um número' };
+    if (password.length === 0) {
+      return { valid: false, error: 'A senha não pode estar vazia' };
     }
     return { valid: true };
   };
@@ -208,15 +199,14 @@ export default function Onboarding() {
                     <Input
                       id="newPassword"
                       type="password"
-                      placeholder="Mínimo 8 caracteres"
+                      placeholder="Digite sua nova senha"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
                       disabled={loading}
-                      minLength={8}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Deve conter: 8+ caracteres, maiúsculas, minúsculas e números
+                      Escolha qualquer senha que você possa lembrar facilmente
                     </p>
                   </div>
                   
