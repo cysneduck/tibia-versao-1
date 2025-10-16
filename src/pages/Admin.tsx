@@ -23,7 +23,6 @@ import {
 import { Users, MapPin, TrendingUp } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/hooks/useAuth";
-import { NotificationTestPanel } from "@/components/NotificationTestPanel";
 
 export default function Admin() {
   const { users, settings, stats, isLoading, updateUserRole, updateSystemSetting } = useAdmin();
@@ -187,9 +186,6 @@ export default function Admin() {
             </form>
           </CardContent>
         </Card>
-
-        {/* Notification Testing */}
-        <NotificationTestPanel />
 
         {/* User Management */}
         <Card className="border-border bg-card/50">
