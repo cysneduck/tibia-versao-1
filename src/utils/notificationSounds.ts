@@ -1,3 +1,11 @@
+import { electronSounds } from './electronSounds';
+
+// Check if running in Electron
+const isElectron = () => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  return userAgent.indexOf(' electron/') > -1;
+};
+
 export class NotificationSound {
   private static audioContext: AudioContext | null = null;
   
@@ -10,6 +18,18 @@ export class NotificationSound {
   
   // Play notification sound with different frequencies for different priorities
   static play(priority: 'high' | 'medium' | 'normal' = 'normal') {
+    // Use Electron native sounds if available
+    if (isElectron()) {
+      const soundTypeMap: Record<string, string> = {
+        high: 'claim_ready',
+        medium: 'claim_expiring',
+        normal: 'queue_update',
+      };
+      electronSounds.playSound(soundTypeMap[priority] as any, priority);
+      return;
+    }
+
+    // Fallback to Web Audio API for browser
     this.init();
     if (!this.audioContext) return;
     

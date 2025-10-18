@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { useDesktopNotifications, NotificationPriority } from '@/hooks/useDesktopNotifications';
 import { NotificationSound } from '@/utils/notificationSounds';
 import { TabNotification } from '@/utils/tabNotification';
+import { useElectronNotifications } from '@/hooks/useElectronNotifications';
+import { isElectron } from '@/utils/isElectron';
 
 interface Notification {
   id: string;
@@ -22,7 +24,9 @@ export const useNotifications = (userId: string | undefined, desktopNotification
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { hasPermission, showNotification } = useDesktopNotifications();
+  const electronNotifications = useElectronNotifications();
   const [urgentClaim, setUrgentClaim] = useState<Notification | null>(null);
+  const isInElectron = isElectron();
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
@@ -98,11 +102,13 @@ export const useNotifications = (userId: string | undefined, desktopNotification
             duration: notification.type === 'claim_ready' ? 10000 : 5000,
           });
           
-          // Play notification sound
+          // Play notification sound (Electron or browser)
           NotificationSound.play(priority);
           
-          // Show desktop notification if enabled and permission granted
-          if (desktopNotificationsEnabled && hasPermission) {
+          // Use Electron notifications if available, otherwise use browser notifications
+          if (isInElectron) {
+            electronNotifications.showNotification(notification);
+          } else if (desktopNotificationsEnabled && hasPermission) {
             const notificationOptions: any = {
               title: notification.title,
               body: notification.message,
@@ -145,15 +151,22 @@ export const useNotifications = (userId: string | undefined, desktopNotification
     };
   }, [queryClient, toast, userId, desktopNotificationsEnabled, hasPermission, showNotification]);
 
-  // Update tab badge with unread count
+  // Update tab badge with unread count (and Electron tray badge)
   useEffect(() => {
     const unread = notifications?.filter(n => !n.is_read).length || 0;
-    TabNotification.setUnread(unread);
+    
+    if (isInElectron) {
+      electronNotifications.updateBadge(unread);
+    } else {
+      TabNotification.setUnread(unread);
+    }
 
     return () => {
-      TabNotification.reset();
+      if (!isInElectron) {
+        TabNotification.reset();
+      }
     };
-  }, [notifications]);
+  }, [notifications, isInElectron, electronNotifications]);
 
   const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
 

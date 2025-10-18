@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { isElectron } from "@/utils/isElectron";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
@@ -119,7 +120,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <PWAInstallPrompt />
+      {!isElectron() && <PWAInstallPrompt />}
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
