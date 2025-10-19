@@ -23,6 +23,9 @@ export const useElectronNotifications = () => {
   // Show notification via Electron
   const showNotification = useCallback((notification: Notification) => {
     console.log('[useElectronNotifications] showNotification called:', notification);
+    console.log('[useElectronNotifications] isElectron():', isElectron());
+    console.log('[useElectronNotifications] electronBridge.isAvailable():', electronBridge.isAvailable());
+    
     if (!isElectron()) {
       console.log('[useElectronNotifications] Not in Electron, skipping');
       return;

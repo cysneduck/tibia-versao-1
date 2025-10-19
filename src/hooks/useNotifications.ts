@@ -27,6 +27,9 @@ export const useNotifications = (userId: string | undefined, desktopNotification
   const electronNotifications = useElectronNotifications();
   const [urgentClaim, setUrgentClaim] = useState<Notification | null>(null);
   const isInElectron = isElectron();
+  
+  console.log('[useNotifications] Hook initialized - isInElectron:', isInElectron);
+  console.log('[useNotifications] window.electronAPI:', typeof window !== 'undefined' ? !!(window as any).electronAPI : 'undefined');
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
@@ -103,7 +106,9 @@ export const useNotifications = (userId: string | undefined, desktopNotification
           });
           
           // Use Electron notifications if available, otherwise use browser notifications
+          console.log('[useNotifications] About to show notification - isInElectron:', isInElectron);
           if (isInElectron) {
+            console.log('[useNotifications] Calling electronNotifications.showNotification');
             // Electron main process will handle sound playback
             electronNotifications.showNotification(notification);
           } else {
