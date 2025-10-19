@@ -3,7 +3,7 @@
  * Central registry of all IPC communication channels between main and renderer processes
  */
 
-module.exports = {
+export default {
   // Notification System
   SHOW_NOTIFICATION: 'show-notification',
   SHOW_URGENT_CLAIM: 'show-urgent-claim',

@@ -5,7 +5,39 @@
  */
 
 const { contextBridge, ipcRenderer } = require('electron');
-const channels = require('./ipcChannels.js');
+
+// IPC Channel constants (inlined to avoid ES module import issues)
+const channels = {
+  SHOW_NOTIFICATION: 'show-notification',
+  SHOW_URGENT_CLAIM: 'show-urgent-claim',
+  CLOSE_NOTIFICATION: 'close-notification',
+  NOTIFICATION_CLICKED: 'notification-clicked',
+  PLAY_SOUND: 'play-sound',
+  STOP_SOUND: 'stop-sound',
+  SET_SOUND_VOLUME: 'set-sound-volume',
+  MINIMIZE_WINDOW: 'minimize-window',
+  MAXIMIZE_WINDOW: 'maximize-window',
+  CLOSE_WINDOW: 'close-window',
+  RESTORE_WINDOW: 'restore-window',
+  HIDE_WINDOW: 'hide-window',
+  SHOW_WINDOW: 'show-window',
+  FLASH_FRAME: 'flash-frame',
+  FOCUS_WINDOW: 'focus-window',
+  UPDATE_TRAY_BADGE: 'update-tray-badge',
+  UPDATE_TRAY_TITLE: 'update-tray-title',
+  TRAY_CLICKED: 'tray-clicked',
+  GET_SETTINGS: 'get-settings',
+  SET_SETTINGS: 'set-settings',
+  AUTO_LAUNCH_ENABLE: 'auto-launch-enable',
+  AUTO_LAUNCH_DISABLE: 'auto-launch-disable',
+  AUTO_LAUNCH_STATUS: 'auto-launch-status',
+  CHECK_FOR_UPDATES: 'check-for-updates',
+  UPDATE_AVAILABLE: 'update-available',
+  UPDATE_DOWNLOADED: 'update-downloaded',
+  INSTALL_UPDATE: 'install-update',
+  GET_APP_VERSION: 'get-app-version',
+  NAVIGATE_TO: 'navigate-to',
+};
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
