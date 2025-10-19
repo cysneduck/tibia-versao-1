@@ -6,6 +6,8 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import soundPlay from 'sound-play';
+import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,14 +16,10 @@ class SoundManager {
   constructor() {
     this.soundsPath = path.join(__dirname, 'sounds');
     this.currentlyPlaying = null;
-    this.volume = 0.7; // 0.0 to 1.0
-    
-    // In a real implementation, you'd use a native audio library
-    // like node-audio or electron-audio for better control
-    // For now, this is a placeholder structure
+    this.volume = 0.7; // 0.0 to 1.0 (note: sound-play doesn't support volume control directly)
   }
 
-  playSound(soundType, priority = 'normal') {
+  async playSound(soundType, priority = 'normal') {
     // Map sound types to files
     const soundFiles = {
       claim_ready: 'urgent-claim.mp3',
@@ -33,18 +31,16 @@ class SoundManager {
     const soundFile = soundFiles[soundType] || soundFiles.queue_update;
     const soundPath = path.join(this.soundsPath, soundFile);
 
+    // Check if sound file exists
+    if (!existsSync(soundPath)) {
+      console.warn(`Sound file not found: ${soundPath}`);
+      console.warn('Please add sound files to electron/sounds/ directory. See electron/sounds/README.md');
+      return;
+    }
+
     try {
-      // This is where you'd integrate with a native audio library
-      // Example pseudo-code:
-      // const audio = new Audio(soundPath);
-      // audio.volume = this.volume;
-      // audio.play();
-      
       console.log(`Playing sound: ${soundPath} at volume ${this.volume}`);
-      
-      // For Electron, you could use the shell to play audio
-      // or integrate with node libraries like 'play-sound' or 'node-wav-player'
-      
+      await soundPlay.play(soundPath);
     } catch (error) {
       console.error('Error playing sound:', error);
     }
