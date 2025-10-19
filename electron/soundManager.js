@@ -32,8 +32,10 @@ class SoundManager {
     const soundFile = soundFiles[soundType] || soundFiles.queue_update;
     const soundPath = path.join(this.soundsPath, soundFile);
 
-    console.log('[SoundManager] Attempting to play sound:');
+    console.log('[SoundManager] ========================================');
+    console.log('[SoundManager] Attempting to play sound at:', new Date().toISOString());
     console.log('[SoundManager] - Sound type:', soundType);
+    console.log('[SoundManager] - Priority:', priority);
     console.log('[SoundManager] - Sound file:', soundFile);
     console.log('[SoundManager] - Full path:', soundPath);
     console.log('[SoundManager] - Platform:', this.platform);
@@ -51,7 +53,11 @@ class SoundManager {
       } catch (err) {
         console.error('[SoundManager] Could not read sounds directory:', err);
       }
-      console.error('[SoundManager] Please add sound files to electron/sounds/ directory. See electron/sounds/README.md');
+      console.error('[SoundManager] Falling back to system beep...');
+      
+      // Fallback: Play system beep
+      this.playSystemBeep(priority);
+      console.log('[SoundManager] ========================================');
       return;
     }
 
@@ -82,6 +88,8 @@ class SoundManager {
           console.error('[SoundManager] ❌ Error executing command:', error);
           console.error('[SoundManager] Error code:', error.code);
           console.error('[SoundManager] Error message:', error.message);
+          console.error('[SoundManager] Falling back to system beep...');
+          this.playSystemBeep(priority);
         }
         if (stdout) {
           console.log('[SoundManager] stdout:', stdout);
@@ -92,9 +100,55 @@ class SoundManager {
         if (!error && !stderr) {
           console.log('[SoundManager] ✅ Sound played successfully');
         }
+        console.log('[SoundManager] ========================================');
       });
     } catch (error) {
       console.error('[SoundManager] ❌ Exception playing sound:', error);
+      console.error('[SoundManager] Falling back to system beep...');
+      this.playSystemBeep(priority);
+      console.log('[SoundManager] ========================================');
+    }
+  }
+
+  playSystemBeep(priority = 'normal') {
+    // Fallback: Use system beep/alert sound
+    console.log('[SoundManager] Playing system beep for priority:', priority);
+    
+    try {
+      const beepCount = priority === 'high' ? 3 : priority === 'medium' ? 2 : 1;
+      
+      if (this.platform === 'win32') {
+        // Windows: Use console beep
+        for (let i = 0; i < beepCount; i++) {
+          exec('rundll32 user32.dll,MessageBeep', (error) => {
+            if (error) {
+              console.error('[SoundManager] Beep error:', error);
+            }
+          });
+        }
+      } else if (this.platform === 'darwin') {
+        // macOS: Use system alert sound
+        for (let i = 0; i < beepCount; i++) {
+          exec('afplay /System/Library/Sounds/Glass.aiff', (error) => {
+            if (error) {
+              console.error('[SoundManager] Beep error:', error);
+            }
+          });
+        }
+      } else {
+        // Linux: Try different beep methods
+        for (let i = 0; i < beepCount; i++) {
+          exec('paplay /usr/share/sounds/freedesktop/stereo/message.oga || beep', (error) => {
+            if (error) {
+              console.error('[SoundManager] Beep error:', error);
+            }
+          });
+        }
+      }
+      
+      console.log('[SoundManager] ✅ System beep triggered');
+    } catch (error) {
+      console.error('[SoundManager] ❌ Could not play system beep:', error);
     }
   }
 
