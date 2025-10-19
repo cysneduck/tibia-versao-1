@@ -23,7 +23,7 @@ class UrgentClaimWindow {
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
     const width = 500;
-    const height = 300;
+    const height = 380; // Increased to prevent content cutoff
 
     this.urgentWindow = new BrowserWindow({
       width,
@@ -101,8 +101,12 @@ class UrgentClaimWindow {
             border-radius: 16px;
             padding: 32px;
             width: 460px;
+            min-height: 340px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
           }
           .icon {
             font-size: 64px;

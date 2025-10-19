@@ -67,12 +67,14 @@ class SoundManager {
       // Use platform-specific command to play audio
       let command;
       if (this.platform === 'win32') {
-        // Windows: Use PowerShell with .Play() instead of .PlaySync()
-        // Escape backslashes in path for PowerShell
-        const escapedPath = soundPath.replace(/\\/g, '\\\\');
-        command = `powershell -c "$player = New-Object System.Media.SoundPlayer '${escapedPath}'; $player.Play()"`;
+        // Windows: Use PowerShell with .PlaySync() for reliable playback
+        // Escape backslashes and quotes in path for PowerShell
+        const escapedPath = soundPath.replace(/\\/g, '\\\\').replace(/'/g, "''");
         
-        console.log('[SoundManager] Executing command:', command);
+        // Use PlaySync() to ensure sound plays completely
+        command = `powershell -c "(New-Object Media.SoundPlayer '${escapedPath}').PlaySync()"`;
+        
+        console.log('[SoundManager] Windows command:', command);
       } else if (this.platform === 'darwin') {
         // macOS: use afplay
         command = `afplay "${soundPath}"`;

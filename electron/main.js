@@ -151,13 +151,23 @@ ipcMain.on(channels.SHOW_NOTIFICATION, (event, data) => {
 });
 
 ipcMain.on(channels.SHOW_URGENT_CLAIM, (event, data) => {
+  console.log('[Main] ========================================');
+  console.log('[Main] SHOW_URGENT_CLAIM IPC received at:', new Date().toISOString());
+  console.log('[Main] Data:', JSON.stringify(data, null, 2));
+  
   urgentClaimWindow.show(data);
+  
+  console.log('[Main] 🔊 Playing URGENT sound (claim_ready)...');
   soundManager.playUrgentSound();
+  
   if (process.platform === 'win32') {
+    console.log('[Main] 💥 Flashing Windows taskbar...');
     mainWindow.flashFrame(true);
   } else if (isMac) {
+    console.log('[Main] 💥 Bouncing macOS dock...');
     app.dock.bounce('critical');
   }
+  console.log('[Main] ========================================');
 });
 
 ipcMain.on(channels.CLOSE_NOTIFICATION, (event, id) => {
