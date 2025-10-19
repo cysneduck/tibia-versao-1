@@ -6,8 +6,8 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import playSound from 'play-sound';
 import { existsSync } from 'fs';
+import { exec } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,7 +17,7 @@ class SoundManager {
     this.soundsPath = path.join(__dirname, 'sounds');
     this.currentlyPlaying = null;
     this.volume = 0.7; // 0.0 to 1.0
-    this.player = playSound({});
+    this.platform = process.platform;
   }
 
   playSound(soundType, priority = 'normal') {
@@ -40,10 +40,24 @@ class SoundManager {
     }
 
     try {
-      console.log(`Playing sound: ${soundPath} at volume ${this.volume}`);
-      this.player.play(soundPath, (err) => {
-        if (err) {
-          console.error('Error playing sound:', err);
+      console.log(`Playing sound: ${soundPath}`);
+      
+      // Use platform-specific command to play audio
+      let command;
+      if (this.platform === 'win32') {
+        // Windows: use PowerShell to play audio
+        command = `powershell -c (New-Object Media.SoundPlayer "${soundPath}").PlaySync()`;
+      } else if (this.platform === 'darwin') {
+        // macOS: use afplay
+        command = `afplay "${soundPath}"`;
+      } else {
+        // Linux: try multiple players
+        command = `paplay "${soundPath}" || aplay "${soundPath}" || mpg123 "${soundPath}"`;
+      }
+
+      exec(command, (error) => {
+        if (error) {
+          console.error('Error playing sound:', error);
         }
       });
     } catch (error) {
