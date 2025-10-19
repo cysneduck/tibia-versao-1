@@ -147,6 +147,7 @@ ipcMain.on(channels.CLOSE_NOTIFICATION, (event, id) => {
 
 // Sound System
 ipcMain.on(channels.PLAY_SOUND, (event, { soundType, priority }) => {
+  console.log('[Main] PLAY_SOUND IPC received:', soundType, priority);
   soundManager.playSound(soundType, priority);
 });
 

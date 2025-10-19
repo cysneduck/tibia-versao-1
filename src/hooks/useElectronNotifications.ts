@@ -23,7 +23,11 @@ export const useElectronNotifications = () => {
 
   // Show notification via Electron
   const showNotification = useCallback((notification: Notification) => {
-    if (!isElectron()) return;
+    console.log('[useElectronNotifications] showNotification called:', notification);
+    if (!isElectron()) {
+      console.log('[useElectronNotifications] Not in Electron, skipping');
+      return;
+    }
 
     const { id, title, message, type, respawn_id } = notification;
 
@@ -34,9 +38,11 @@ export const useElectronNotifications = () => {
     } else if (type === 'claim_expiring') {
       priority = 'medium';
     }
+    console.log('[useElectronNotifications] Priority:', priority, 'Type:', type);
 
     // Show urgent claim window for high priority
     if (priority === 'high' && respawn_id) {
+      console.log('[useElectronNotifications] Showing urgent claim window');
       // Calculate expiration (5 minutes from now)
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
       
@@ -48,8 +54,10 @@ export const useElectronNotifications = () => {
 
       // Flash taskbar and play urgent sound
       electronBridge.flashFrame(true);
+      console.log('[useElectronNotifications] Playing urgent sound via electronSounds');
       electronSounds.playUrgentSound();
     } else {
+      console.log('[useElectronNotifications] Showing regular notification');
       // Show regular notification
       electronBridge.showNotification({
         id,
@@ -62,8 +70,10 @@ export const useElectronNotifications = () => {
 
       // Play appropriate sound
       if (priority === 'medium') {
+        console.log('[useElectronNotifications] Playing expiring sound');
         electronSounds.playExpiringSound();
       } else {
+        console.log('[useElectronNotifications] Playing queue sound');
         electronSounds.playQueueSound();
       }
     }

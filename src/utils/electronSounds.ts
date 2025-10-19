@@ -11,11 +11,13 @@ export type SoundPriority = 'high' | 'medium' | 'normal';
 
 class ElectronSoundManager {
   playSound(type: SoundType, priority: SoundPriority = 'normal'): void {
+    console.log('[electronSounds] playSound called:', type, priority);
     if (!isElectron()) {
-      console.log('Not in Electron, skipping native sound');
+      console.log('[electronSounds] Not in Electron, skipping native sound');
       return;
     }
 
+    console.log('[electronSounds] Calling electronBridge.playSound');
     electronBridge.playSound(type, priority);
   }
 

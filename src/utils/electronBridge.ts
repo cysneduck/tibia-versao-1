@@ -54,8 +54,16 @@ class ElectronBridge {
 
   // Sounds
   playSound(soundType: string, priority: 'high' | 'medium' | 'normal' = 'normal'): void {
-    if (!this.isAvailable()) return;
+    console.log('[electronBridge] playSound called:', soundType, priority);
+    console.log('[electronBridge] isAvailable:', this.isAvailable());
+    console.log('[electronBridge] api:', this.api);
+    if (!this.isAvailable()) {
+      console.log('[electronBridge] API not available, returning');
+      return;
+    }
+    console.log('[electronBridge] Calling api.playSound');
     this.api.playSound(soundType, priority);
+    console.log('[electronBridge] api.playSound called');
   }
 
   stopSound(): void {
