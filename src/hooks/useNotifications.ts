@@ -75,6 +75,8 @@ export const useNotifications = (userId: string | undefined, desktopNotification
   useEffect(() => {
     if (!userId) return;
 
+    console.log('[useNotifications] Setting up real-time subscription for user:', userId);
+
     const channel = supabase
       .channel('notifications-changes')
       .on(
@@ -86,6 +88,9 @@ export const useNotifications = (userId: string | undefined, desktopNotification
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
+          console.log('[useNotifications] Real-time INSERT event received at', new Date().toISOString());
+          console.log('[useNotifications] Payload:', JSON.stringify(payload, null, 2));
+          
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
           
           const notification = payload.new as Notification;
@@ -152,12 +157,28 @@ export const useNotifications = (userId: string | undefined, desktopNotification
           }
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        console.log('[useNotifications] Subscription status:', status);
+        if (err) {
+          console.error('[useNotifications] Subscription error:', err);
+        }
+        
+        if (status === 'SUBSCRIBED') {
+          console.log('[useNotifications] ✅ Successfully subscribed to notifications channel');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('[useNotifications] ❌ Channel error - real-time updates will not work');
+        } else if (status === 'TIMED_OUT') {
+          console.error('[useNotifications] ⏱️ Subscription timed out');
+        } else if (status === 'CLOSED') {
+          console.log('[useNotifications] Channel closed');
+        }
+      });
 
     return () => {
+      console.log('[useNotifications] Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [queryClient, toast, userId, desktopNotificationsEnabled, hasPermission, showNotification]);
+  }, [queryClient, toast, userId, desktopNotificationsEnabled, hasPermission, showNotification, isInElectron, electronNotifications]);
 
   // Update tab badge with unread count (and Electron tray badge)
   useEffect(() => {
