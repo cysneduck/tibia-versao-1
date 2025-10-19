@@ -23,10 +23,10 @@ class SoundManager {
   playSound(soundType, priority = 'normal') {
     // Map sound types to files
     const soundFiles = {
-      claim_ready: 'urgent-claim.mp3',
-      claim_expiring: 'normal-claim.mp3',
-      queue_update: 'queue-ready.mp3',
-      system_alert: 'normal-claim.mp3',
+      claim_ready: 'urgent-claim.wav',
+      claim_expiring: 'normal-claim.wav',
+      queue_update: 'queue-ready.wav',
+      system_alert: 'normal-claim.wav',
     };
 
     const soundFile = soundFiles[soundType] || soundFiles.queue_update;
