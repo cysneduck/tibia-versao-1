@@ -3,7 +3,8 @@
  * Handles automatic updates using electron-updater
  */
 
-import { autoUpdater } from 'electron-updater';
+import pkg from 'electron-updater';
+const { autoUpdater } = pkg;
 import { dialog } from 'electron';
 
 class UpdaterManager {
