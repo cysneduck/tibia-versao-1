@@ -4,8 +4,8 @@
  * Exposes safe Electron APIs to React app via contextBridge
  */
 
-const { contextBridge, ipcRenderer } = require('electron');
-const channels = require('./ipcChannels');
+import { contextBridge, ipcRenderer } from 'electron';
+import channels from './ipcChannels.js';
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object

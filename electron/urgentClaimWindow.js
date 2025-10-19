@@ -3,8 +3,7 @@
  * Always-on-top modal window for urgent claim notifications
  */
 
-const { BrowserWindow, screen } = require('electron');
-const path = require('path');
+import { BrowserWindow, screen } from 'electron';
 
 class UrgentClaimWindow {
   constructor(mainWindow) {
@@ -233,4 +232,4 @@ class UrgentClaimWindow {
   }
 }
 
-module.exports = UrgentClaimWindow;
+export default UrgentClaimWindow;

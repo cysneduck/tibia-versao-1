@@ -3,8 +3,7 @@
  * Handles app auto-start on system boot
  */
 
-const { app } = require('electron');
-const path = require('path');
+import { app } from 'electron';
 
 class AutoLauncher {
   constructor() {
@@ -63,4 +62,4 @@ class AutoLauncher {
   }
 }
 
-module.exports = AutoLauncher;
+export default AutoLauncher;

@@ -3,8 +3,13 @@
  * Creates and manages system tray icon with context menu
  */
 
-const { app, Menu, Tray, nativeImage } = require('electron');
-const path = require('path');
+import { app, Menu, Tray, nativeImage } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class TrayManager {
   constructor(mainWindow) {
@@ -141,4 +146,4 @@ class TrayManager {
   }
 }
 
-module.exports = TrayManager;
+export default TrayManager;

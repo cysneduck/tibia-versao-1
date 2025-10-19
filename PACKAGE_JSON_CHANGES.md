@@ -79,6 +79,17 @@ Your package.json should look like this (showing only Electron-related parts):
 }
 ```
 
+## Important: ES Module Compatibility
+
+All Electron files have been written using **ES module syntax** (`import`/`export`) to be compatible with modern React projects that use `"type": "module"` in package.json.
+
+If your package.json already contains `"type": "module"` (which is common in Vite/React projects), no additional changes are needed - the Electron files will work as-is.
+
+If for some reason you need CommonJS format instead, you would need to:
+1. Either remove `"type": "module"` from package.json
+2. Or rename all Electron .js files to .cjs
+3. Or convert the import/export statements back to require/module.exports
+
 ## After Making Changes
 
 1. Run `npm install` to install new dependencies

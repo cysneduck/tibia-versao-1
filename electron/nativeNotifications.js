@@ -3,7 +3,12 @@
  * Uses Electron's native notification API for system-level notifications
  */
 
-const { Notification, app } = require('electron');
+import { Notification, app } from 'electron';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class NativeNotificationManager {
   constructor(mainWindow) {
@@ -88,4 +93,4 @@ class NativeNotificationManager {
   }
 }
 
-module.exports = NativeNotificationManager;
+export default NativeNotificationManager;

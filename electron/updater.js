@@ -3,8 +3,8 @@
  * Handles automatic updates using electron-updater
  */
 
-const { autoUpdater } = require('electron-updater');
-const { dialog } = require('electron');
+import { autoUpdater } from 'electron-updater';
+import { dialog } from 'electron';
 
 class UpdaterManager {
   constructor(mainWindow) {
@@ -87,4 +87,4 @@ class UpdaterManager {
   }
 }
 
-module.exports = UpdaterManager;
+export default UpdaterManager;

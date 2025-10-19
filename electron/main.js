@@ -3,16 +3,21 @@
  * Entry point for the desktop application
  */
 
-const { app, BrowserWindow, ipcMain, protocol } = require('electron');
-const path = require('path');
-const channels = require('./ipcChannels');
-const WindowManager = require('./windowManager');
-const TrayManager = require('./trayManager');
-const NotificationWindowManager = require('./notificationWindow');
-const UrgentClaimWindow = require('./urgentClaimWindow');
-const SoundManager = require('./soundManager');
-const AutoLauncher = require('./autoLauncher');
-const UpdaterManager = require('./updater');
+import { app, BrowserWindow, ipcMain } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import channels from './ipcChannels.js';
+import WindowManager from './windowManager.js';
+import TrayManager from './trayManager.js';
+import NotificationWindowManager from './notificationWindow.js';
+import UrgentClaimWindow from './urgentClaimWindow.js';
+import SoundManager from './soundManager.js';
+import AutoLauncher from './autoLauncher.js';
+import UpdaterManager from './updater.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Keep a global reference of the window object
 let mainWindow = null;

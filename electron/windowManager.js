@@ -3,8 +3,8 @@
  * Handles main window lifecycle, minimize to tray, position memory
  */
 
-const { app } = require('electron');
-const Store = require('electron-store');
+import { app, Notification } from 'electron';
+import Store from 'electron-store';
 
 class WindowManager {
   constructor(mainWindow) {
@@ -72,7 +72,6 @@ class WindowManager {
     
     // On macOS, show notification about minimize to tray (first time only)
     if (process.platform === 'darwin' && !this.store.get('trayNotificationShown')) {
-      const { Notification } = require('electron');
       new Notification({
         title: 'Claimed System',
         body: 'App minimized to menu bar. Click the icon to restore.',
@@ -107,4 +106,4 @@ class WindowManager {
   }
 }
 
-module.exports = WindowManager;
+export default WindowManager;

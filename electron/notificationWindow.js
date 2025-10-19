@@ -3,8 +3,7 @@
  * Creates frameless, always-on-top notification windows (like Discord)
  */
 
-const { BrowserWindow, screen } = require('electron');
-const path = require('path');
+import { BrowserWindow, screen } from 'electron';
 
 class NotificationWindowManager {
   constructor() {
@@ -218,4 +217,4 @@ class NotificationWindowManager {
   }
 }
 
-module.exports = NotificationWindowManager;
+export default NotificationWindowManager;
