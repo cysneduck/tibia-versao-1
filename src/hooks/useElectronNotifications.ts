@@ -5,7 +5,6 @@
 
 import { useEffect, useCallback } from 'react';
 import { electronBridge } from '@/utils/electronBridge';
-import { electronSounds } from '@/utils/electronSounds';
 import { isElectron } from '@/utils/isElectron';
 import { useNavigate } from 'react-router-dom';
 
@@ -52,13 +51,11 @@ export const useElectronNotifications = () => {
         expiresAt,
       });
 
-      // Flash taskbar and play urgent sound
+      // Flash taskbar - sound will be played by main process
       electronBridge.flashFrame(true);
-      console.log('[useElectronNotifications] Playing urgent sound via electronSounds');
-      electronSounds.playUrgentSound();
     } else {
       console.log('[useElectronNotifications] Showing regular notification');
-      // Show regular notification
+      // Show regular notification - sound will be played by main process
       electronBridge.showNotification({
         id,
         title,
@@ -67,15 +64,6 @@ export const useElectronNotifications = () => {
         respawnId: respawn_id || undefined,
         duration: priority === 'high' ? 10000 : 5000,
       });
-
-      // Play appropriate sound
-      if (priority === 'medium') {
-        console.log('[useElectronNotifications] Playing expiring sound');
-        electronSounds.playExpiringSound();
-      } else {
-        console.log('[useElectronNotifications] Playing queue sound');
-        electronSounds.playQueueSound();
-      }
     }
   }, []);
 

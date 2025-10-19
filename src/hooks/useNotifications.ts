@@ -102,13 +102,15 @@ export const useNotifications = (userId: string | undefined, desktopNotification
             duration: notification.type === 'claim_ready' ? 10000 : 5000,
           });
           
-          // Play notification sound (Electron or browser)
-          NotificationSound.play(priority);
-          
           // Use Electron notifications if available, otherwise use browser notifications
           if (isInElectron) {
+            // Electron main process will handle sound playback
             electronNotifications.showNotification(notification);
-          } else if (desktopNotificationsEnabled && hasPermission) {
+          } else {
+            // Play notification sound for browser
+            NotificationSound.play(priority);
+            
+            if (desktopNotificationsEnabled && hasPermission) {
             const notificationOptions: any = {
               title: notification.title,
               body: notification.message,
@@ -129,7 +131,8 @@ export const useNotifications = (userId: string | undefined, desktopNotification
               notificationOptions.image = '/pwa-512x512.png';
             }
 
-            showNotification(notificationOptions);
+              showNotification(notificationOptions);
+            }
           }
 
           // Handle urgent claim modal and tab notifications

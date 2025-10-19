@@ -128,7 +128,22 @@ app.on('before-quit', () => {
 
 // Notification System
 ipcMain.on(channels.SHOW_NOTIFICATION, (event, data) => {
+  console.log('[Main] SHOW_NOTIFICATION received:', data);
   notificationManager.showNotification(data);
+  
+  // Play appropriate sound based on notification type
+  const soundTypeMap = {
+    'claim_ready': 'claim_ready',
+    'claim_expiring': 'claim_expiring',
+    'queue_update': 'queue_update',
+    'system_alert': 'system_alert',
+  };
+  
+  const soundType = soundTypeMap[data.type] || 'queue_update';
+  const priority = data.type === 'claim_expiring' ? 'medium' : 'normal';
+  
+  console.log('[Main] Playing sound:', soundType, priority);
+  soundManager.playSound(soundType, priority);
 });
 
 ipcMain.on(channels.SHOW_URGENT_CLAIM, (event, data) => {
