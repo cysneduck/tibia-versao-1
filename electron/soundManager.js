@@ -6,7 +6,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import soundPlay from 'sound-play';
+import playSound from 'play-sound';
 import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,10 +16,11 @@ class SoundManager {
   constructor() {
     this.soundsPath = path.join(__dirname, 'sounds');
     this.currentlyPlaying = null;
-    this.volume = 0.7; // 0.0 to 1.0 (note: sound-play doesn't support volume control directly)
+    this.volume = 0.7; // 0.0 to 1.0
+    this.player = playSound({});
   }
 
-  async playSound(soundType, priority = 'normal') {
+  playSound(soundType, priority = 'normal') {
     // Map sound types to files
     const soundFiles = {
       claim_ready: 'urgent-claim.mp3',
@@ -40,7 +41,11 @@ class SoundManager {
 
     try {
       console.log(`Playing sound: ${soundPath} at volume ${this.volume}`);
-      await soundPlay.play(soundPath);
+      this.player.play(soundPath, (err) => {
+        if (err) {
+          console.error('Error playing sound:', err);
+        }
+      });
     } catch (error) {
       console.error('Error playing sound:', error);
     }
