@@ -32,36 +32,69 @@ class SoundManager {
     const soundFile = soundFiles[soundType] || soundFiles.queue_update;
     const soundPath = path.join(this.soundsPath, soundFile);
 
+    console.log('[SoundManager] Attempting to play sound:');
+    console.log('[SoundManager] - Sound type:', soundType);
+    console.log('[SoundManager] - Sound file:', soundFile);
+    console.log('[SoundManager] - Full path:', soundPath);
+    console.log('[SoundManager] - Platform:', this.platform);
+
     // Check if sound file exists
     if (!existsSync(soundPath)) {
-      console.warn(`Sound file not found: ${soundPath}`);
-      console.warn('Please add sound files to electron/sounds/ directory. See electron/sounds/README.md');
+      console.error('[SoundManager] ❌ Sound file NOT FOUND:', soundPath);
+      console.error('[SoundManager] Files in sounds directory:');
+      
+      // List what files ARE in the directory
+      const fs = require('fs');
+      try {
+        const files = fs.readdirSync(this.soundsPath);
+        console.error('[SoundManager] Available files:', files);
+      } catch (err) {
+        console.error('[SoundManager] Could not read sounds directory:', err);
+      }
+      console.error('[SoundManager] Please add sound files to electron/sounds/ directory. See electron/sounds/README.md');
       return;
     }
 
+    console.log('[SoundManager] ✅ Sound file exists, attempting to play...');
+
     try {
-      console.log(`Playing sound: ${soundPath}`);
-      
       // Use platform-specific command to play audio
       let command;
       if (this.platform === 'win32') {
-        // Windows: use PowerShell to play audio
-        command = `powershell -c (New-Object Media.SoundPlayer "${soundPath}").PlaySync()`;
+        // Windows: Use PowerShell with .Play() instead of .PlaySync()
+        // Escape backslashes in path for PowerShell
+        const escapedPath = soundPath.replace(/\\/g, '\\\\');
+        command = `powershell -c "$player = New-Object System.Media.SoundPlayer '${escapedPath}'; $player.Play()"`;
+        
+        console.log('[SoundManager] Executing command:', command);
       } else if (this.platform === 'darwin') {
         // macOS: use afplay
         command = `afplay "${soundPath}"`;
+        console.log('[SoundManager] Executing command:', command);
       } else {
         // Linux: try multiple players
         command = `paplay "${soundPath}" || aplay "${soundPath}" || mpg123 "${soundPath}"`;
+        console.log('[SoundManager] Executing command:', command);
       }
 
-      exec(command, (error) => {
+      exec(command, (error, stdout, stderr) => {
         if (error) {
-          console.error('Error playing sound:', error);
+          console.error('[SoundManager] ❌ Error executing command:', error);
+          console.error('[SoundManager] Error code:', error.code);
+          console.error('[SoundManager] Error message:', error.message);
+        }
+        if (stdout) {
+          console.log('[SoundManager] stdout:', stdout);
+        }
+        if (stderr) {
+          console.error('[SoundManager] stderr:', stderr);
+        }
+        if (!error && !stderr) {
+          console.log('[SoundManager] ✅ Sound played successfully');
         }
       });
     } catch (error) {
-      console.error('Error playing sound:', error);
+      console.error('[SoundManager] ❌ Exception playing sound:', error);
     }
   }
 

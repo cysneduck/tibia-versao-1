@@ -4,29 +4,29 @@ This folder should contain the following audio files:
 
 ## Required Sound Files
 
-1. **urgent-claim.mp3** - High priority notification sound
+1. **urgent-claim.wav** - High priority notification sound
    - Used for: `claim_ready` notifications
    - Should be attention-grabbing and urgent
    - Recommended: 1-2 seconds, ascending tones
 
-2. **normal-claim.mp3** - Medium priority notification sound
+2. **normal-claim.wav** - Medium priority notification sound
    - Used for: `claim_expiring` notifications
    - Should be noticeable but not alarming
    - Recommended: 0.5-1 second, two-tone
 
-3. **queue-ready.mp3** - Normal priority notification sound
+3. **queue-ready.wav** - Normal priority notification sound
    - Used for: `queue_update` and `system_alert` notifications
    - Should be gentle and pleasant
    - Recommended: 0.5-1 second, single tone
 
 ## How to Add Sounds
 
-1. Create or download appropriate .mp3 files
+1. Create or download appropriate .wav files
 2. Place them in this folder with the exact names above
 3. Ensure files are:
-   - Format: MP3 (recommended)
+   - Format: WAV (recommended)
    - Sample rate: 44.1 kHz or 48 kHz
-   - Bit rate: 128 kbps or higher
+   - Bit depth: 16-bit or higher
    - Duration: 0.5-2 seconds
    - Normalized volume (not too loud or quiet)
 
