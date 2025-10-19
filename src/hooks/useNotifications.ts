@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useDesktopNotifications, NotificationPriority } from '@/hooks/useDesktopNotifications';
 import { NotificationSound } from '@/utils/notificationSounds';
 import { TabNotification } from '@/utils/tabNotification';
@@ -20,6 +20,8 @@ interface Notification {
   expires_at: string | null;
 }
 
+const POLL_INTERVAL = 5000; // 5 seconds
+
 export const useNotifications = (userId: string | undefined, desktopNotificationsEnabled: boolean = true) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -27,6 +29,10 @@ export const useNotifications = (userId: string | undefined, desktopNotification
   const electronNotifications = useElectronNotifications();
   const [urgentClaim, setUrgentClaim] = useState<Notification | null>(null);
   const isInElectron = isElectron();
+  
+  // Track which notifications have already played sound
+  const soundedNotifications = useRef(new Set<string>());
+  const lastCheckedTimestamp = useRef(new Date().toISOString());
   
   console.log('[useNotifications] Hook initialized - isInElectron:', isInElectron);
   console.log('[useNotifications] window.electronAPI:', typeof window !== 'undefined' ? !!(window as any).electronAPI : 'undefined');
@@ -71,7 +77,77 @@ export const useNotifications = (userId: string | undefined, desktopNotification
     },
   });
 
-  // Subscribe to real-time notification updates
+  // Centralized notification handler for both real-time and polling
+  const handleNewNotification = useCallback((notification: Notification, source: 'realtime' | 'polling') => {
+    console.log(`[${source}] Processing notification:`, notification.id, notification.type);
+    
+    // Only play sound if we haven't already
+    if (soundedNotifications.current.has(notification.id)) {
+      console.log(`[${source}] Skipping sound - already played for`, notification.id);
+      return;
+    }
+    soundedNotifications.current.add(notification.id);
+    
+    // Determine priority based on notification type
+    let priority: NotificationPriority = 'normal';
+    if (notification.type === 'claim_ready') {
+      priority = 'high';
+    } else if (notification.type === 'claim_expiring') {
+      priority = 'medium';
+    }
+    
+    // Show in-app toast
+    toast({
+      title: notification.title,
+      description: notification.message,
+      duration: notification.type === 'claim_ready' ? 10000 : 5000,
+    });
+    
+    // Use Electron notifications if available, otherwise use browser notifications
+    console.log(`[${source}] Playing sound - priority:`, priority, 'isInElectron:', isInElectron);
+    if (isInElectron) {
+      console.log(`[${source}] Calling electronNotifications.showNotification`);
+      // Electron main process will handle sound playback
+      electronNotifications.showNotification(notification);
+    } else {
+      // Play notification sound for browser
+      NotificationSound.play(priority);
+      
+      if (desktopNotificationsEnabled && hasPermission) {
+        const notificationOptions: any = {
+          title: notification.title,
+          body: notification.message,
+          priority,
+          tag: `respawn-${notification.respawn_id}`,
+          onClick: () => {
+            if (notification.respawn_id) {
+              window.location.href = '/';
+            }
+          },
+        };
+
+        // Enhance high-priority claim_ready notifications
+        if (notification.type === 'claim_ready') {
+          notificationOptions.requireInteraction = true;
+          notificationOptions.renotify = true;
+          notificationOptions.image = '/pwa-512x512.png';
+        }
+
+        showNotification(notificationOptions);
+      }
+    }
+
+    // Handle urgent claim modal and tab notifications
+    if (notification.type === 'claim_ready') {
+      TabNotification.blink();
+      
+      if (document.visibilityState === 'visible') {
+        setUrgentClaim(notification);
+      }
+    }
+  }, [toast, isInElectron, electronNotifications, desktopNotificationsEnabled, hasPermission, showNotification]);
+
+  // Real-time subscription (best effort - polling is the reliable backup)
   useEffect(() => {
     if (!userId) return;
 
@@ -88,97 +164,78 @@ export const useNotifications = (userId: string | undefined, desktopNotification
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          console.log('[useNotifications] Real-time INSERT event received at', new Date().toISOString());
-          console.log('[useNotifications] Payload:', JSON.stringify(payload, null, 2));
+          console.log('[realtime] INSERT event received at', new Date().toISOString());
           
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
           
           const notification = payload.new as Notification;
-          
-          // Determine priority based on notification type
-          let priority: NotificationPriority = 'normal';
-          if (notification.type === 'claim_ready') {
-            priority = 'high';
-          } else if (notification.type === 'claim_expiring') {
-            priority = 'medium';
-          }
-          
-          // Show in-app toast
-          toast({
-            title: notification.title,
-            description: notification.message,
-            duration: notification.type === 'claim_ready' ? 10000 : 5000,
-          });
-          
-          // Use Electron notifications if available, otherwise use browser notifications
-          console.log('[useNotifications] About to show notification - isInElectron:', isInElectron);
-          if (isInElectron) {
-            console.log('[useNotifications] Calling electronNotifications.showNotification');
-            // Electron main process will handle sound playback
-            electronNotifications.showNotification(notification);
-          } else {
-            // Play notification sound for browser
-            NotificationSound.play(priority);
-            
-            if (desktopNotificationsEnabled && hasPermission) {
-            const notificationOptions: any = {
-              title: notification.title,
-              body: notification.message,
-              priority,
-              tag: `respawn-${notification.respawn_id}`,
-              onClick: () => {
-                // Focus window when notification is clicked
-                if (notification.respawn_id) {
-                  window.location.href = '/';
-                }
-              },
-            };
-
-            // Enhance high-priority claim_ready notifications
-            if (notification.type === 'claim_ready') {
-              notificationOptions.requireInteraction = true; // Stays until clicked
-              notificationOptions.renotify = true; // Re-alerts if duplicate
-              notificationOptions.image = '/pwa-512x512.png';
-            }
-
-              showNotification(notificationOptions);
-            }
-          }
-
-          // Handle urgent claim modal and tab notifications
-          if (notification.type === 'claim_ready') {
-            // Blink tab title for urgent attention
-            TabNotification.blink();
-            
-            // Show urgent modal if tab is visible
-            if (document.visibilityState === 'visible') {
-              setUrgentClaim(notification);
-            }
-          }
+          handleNewNotification(notification, 'realtime');
         }
       )
       .subscribe((status, err) => {
-        console.log('[useNotifications] Subscription status:', status);
+        console.log('[realtime] Subscription status:', status);
         if (err) {
-          console.error('[useNotifications] Subscription error:', err);
+          console.error('[realtime] Subscription error:', err);
         }
         
         if (status === 'SUBSCRIBED') {
-          console.log('[useNotifications] ✅ Successfully subscribed to notifications channel');
+          console.log('[realtime] ✅ Successfully subscribed to notifications channel');
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('[useNotifications] ❌ Channel error - real-time updates will not work');
+          console.error('[realtime] ❌ Channel error - polling will handle notifications');
         } else if (status === 'TIMED_OUT') {
-          console.error('[useNotifications] ⏱️ Subscription timed out');
+          console.error('[realtime] ⏱️ Subscription timed out');
         } else if (status === 'CLOSED') {
-          console.log('[useNotifications] Channel closed');
+          console.log('[realtime] Channel closed');
         }
       });
 
     return () => {
-      console.log('[useNotifications] Cleaning up real-time subscription');
+      console.log('[realtime] Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [queryClient, toast, userId, desktopNotificationsEnabled, hasPermission, showNotification, isInElectron, electronNotifications]);
+  }, [queryClient, userId, handleNewNotification]);
+
+  // Polling mechanism (reliable backup for real-time)
+  useEffect(() => {
+    if (!userId) return;
+
+    console.log('[polling] Starting notification polling with interval:', POLL_INTERVAL);
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .gt('created_at', lastCheckedTimestamp.current)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('[polling] Error:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          console.log(`[polling] Found ${data.length} new notification(s)`);
+          
+          data.forEach((notification) => {
+            handleNewNotification(notification as Notification, 'polling');
+          });
+          
+          // Update last checked timestamp
+          lastCheckedTimestamp.current = data[data.length - 1].created_at;
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        }
+      } catch (error) {
+        console.error('[polling] Exception:', error);
+      }
+    }, POLL_INTERVAL);
+
+    return () => {
+      console.log('[polling] Cleaning up polling interval');
+      clearInterval(pollInterval);
+    };
+  }, [userId, queryClient, handleNewNotification]);
 
   // Update tab badge with unread count (and Electron tray badge)
   useEffect(() => {
