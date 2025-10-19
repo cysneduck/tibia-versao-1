@@ -33,13 +33,39 @@ class ElectronBridge {
 
   // Notifications
   showNotification(data: NotificationData): void {
-    if (!this.isAvailable()) return;
+    console.log('[electronBridge] ========================================');
+    console.log('[electronBridge] showNotification called at:', new Date().toISOString());
+    console.log('[electronBridge] Data:', JSON.stringify(data, null, 2));
+    console.log('[electronBridge] isAvailable:', this.isAvailable());
+    
+    if (!this.isAvailable()) {
+      console.log('[electronBridge] ❌ API not available');
+      console.log('[electronBridge] ========================================');
+      return;
+    }
+    
+    console.log('[electronBridge] ✅ Sending SHOW_NOTIFICATION IPC...');
     this.api.showNotification(data);
+    console.log('[electronBridge] ✅ IPC sent successfully');
+    console.log('[electronBridge] ========================================');
   }
 
   showUrgentClaim(data: UrgentClaimData): void {
-    if (!this.isAvailable()) return;
+    console.log('[electronBridge] ========================================');
+    console.log('[electronBridge] showUrgentClaim called at:', new Date().toISOString());
+    console.log('[electronBridge] Data:', JSON.stringify(data, null, 2));
+    console.log('[electronBridge] isAvailable:', this.isAvailable());
+    
+    if (!this.isAvailable()) {
+      console.log('[electronBridge] ❌ API not available');
+      console.log('[electronBridge] ========================================');
+      return;
+    }
+    
+    console.log('[electronBridge] ✅ Sending SHOW_URGENT_CLAIM IPC...');
     this.api.showUrgentClaim(data);
+    console.log('[electronBridge] ✅ IPC sent successfully');
+    console.log('[electronBridge] ========================================');
   }
 
   closeNotification(id: string): void {

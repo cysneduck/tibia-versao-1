@@ -22,16 +22,25 @@ export const useElectronNotifications = () => {
 
   // Show notification via Electron
   const showNotification = useCallback((notification: Notification) => {
-    console.log('[useElectronNotifications] showNotification called:', notification);
+    console.log('[useElectronNotifications] ========================================');
+    console.log('[useElectronNotifications] showNotification called at:', new Date().toISOString());
+    console.log('[useElectronNotifications] Notification object:', JSON.stringify(notification, null, 2));
     console.log('[useElectronNotifications] isElectron():', isElectron());
     console.log('[useElectronNotifications] electronBridge.isAvailable():', electronBridge.isAvailable());
     
     if (!isElectron()) {
-      console.log('[useElectronNotifications] Not in Electron, skipping');
+      console.log('[useElectronNotifications] ❌ Not in Electron, skipping');
+      console.log('[useElectronNotifications] ========================================');
       return;
     }
 
     const { id, title, message, type, respawn_id } = notification;
+    console.log('[useElectronNotifications] Extracted fields:');
+    console.log('[useElectronNotifications] - id:', id);
+    console.log('[useElectronNotifications] - title:', title);
+    console.log('[useElectronNotifications] - message:', message);
+    console.log('[useElectronNotifications] - type:', type);
+    console.log('[useElectronNotifications] - respawn_id:', respawn_id);
 
     // Determine priority
     let priority: 'high' | 'medium' | 'normal' = 'normal';
@@ -40,11 +49,15 @@ export const useElectronNotifications = () => {
     } else if (type === 'claim_expiring') {
       priority = 'medium';
     }
-    console.log('[useElectronNotifications] Priority:', priority, 'Type:', type);
+    console.log('[useElectronNotifications] Calculated priority:', priority);
 
     // Show urgent claim window for high priority
     if (priority === 'high' && respawn_id) {
-      console.log('[useElectronNotifications] Showing urgent claim window');
+      console.log('[useElectronNotifications] ✅ Conditions met for urgent claim window:');
+      console.log('[useElectronNotifications] - priority === "high":', priority === 'high');
+      console.log('[useElectronNotifications] - respawn_id exists:', !!respawn_id);
+      console.log('[useElectronNotifications] Calling electronBridge.showUrgentClaim...');
+      
       // Calculate expiration (5 minutes from now)
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
       
@@ -53,11 +66,17 @@ export const useElectronNotifications = () => {
         claimName: title,
         expiresAt,
       });
+      console.log('[useElectronNotifications] ✅ showUrgentClaim called successfully');
 
       // Flash taskbar - sound will be played by main process
       electronBridge.flashFrame(true);
+      console.log('[useElectronNotifications] ✅ flashFrame called');
     } else {
-      console.log('[useElectronNotifications] Showing regular notification');
+      console.log('[useElectronNotifications] ⚠️ Using regular notification (not urgent):');
+      console.log('[useElectronNotifications] - priority === "high":', priority === 'high');
+      console.log('[useElectronNotifications] - respawn_id exists:', !!respawn_id);
+      console.log('[useElectronNotifications] Calling electronBridge.showNotification...');
+      
       // Show regular notification - sound will be played by main process
       electronBridge.showNotification({
         id,
@@ -67,7 +86,9 @@ export const useElectronNotifications = () => {
         respawnId: respawn_id || undefined,
         duration: priority === 'high' ? 10000 : 5000,
       });
+      console.log('[useElectronNotifications] ✅ showNotification called successfully');
     }
+    console.log('[useElectronNotifications] ========================================');
   }, []);
 
   // Update tray badge
