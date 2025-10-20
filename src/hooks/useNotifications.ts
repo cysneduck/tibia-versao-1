@@ -110,6 +110,34 @@ export const useNotifications = (userId: string | undefined, desktopNotification
     },
   });
 
+  const deleteAllNotifications = useMutation({
+    mutationFn: async () => {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      toast({
+        title: "Notifications deleted",
+        description: "All notifications have been cleared",
+      });
+    },
+    onError: (error) => {
+      console.error('[deleteAllNotifications] Error:', error);
+      toast({
+        title: "Error deleting notifications",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Centralized notification handler for both real-time and polling
   const handleNewNotification = useCallback((notification: Notification, source: 'realtime' | 'polling') => {
     console.log(`[${source}] Processing notification:`, notification.id, notification.type);
@@ -312,6 +340,7 @@ export const useNotifications = (userId: string | undefined, desktopNotification
     markAsRead,
     deleteNotification,
     markAllAsRead,
+    deleteAllNotifications,
     urgentClaim,
     setUrgentClaim,
   };

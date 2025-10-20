@@ -20,7 +20,7 @@ interface NotificationPanelProps {
 }
 
 export const NotificationPanel = ({ userId, desktopNotificationsEnabled = true }: NotificationPanelProps) => {
-  const { notifications, unreadCount, markAsRead, deleteNotification, markAllAsRead } = useNotifications(userId, desktopNotificationsEnabled);
+  const { notifications, unreadCount, markAsRead, deleteNotification, deleteAllNotifications } = useNotifications(userId, desktopNotificationsEnabled);
   const navigate = useNavigate();
 
   const getNotificationColor = (type: string) => {
@@ -74,8 +74,8 @@ export const NotificationPanel = ({ userId, desktopNotificationsEnabled = true }
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => markAllAsRead.mutate()}
-                disabled={markAllAsRead.isPending}
+                onClick={() => deleteAllNotifications.mutate()}
+                disabled={deleteAllNotifications.isPending}
               >
                 Clear All
               </Button>
