@@ -178,6 +178,7 @@ export type Database = {
           claim_reminders: boolean | null
           created_at: string | null
           desktop_notifications: boolean | null
+          email: string | null
           email_notifications: boolean | null
           first_login: boolean | null
           id: string
@@ -190,6 +191,7 @@ export type Database = {
           claim_reminders?: boolean | null
           created_at?: string | null
           desktop_notifications?: boolean | null
+          email?: string | null
           email_notifications?: boolean | null
           first_login?: boolean | null
           id: string
@@ -202,6 +204,7 @@ export type Database = {
           claim_reminders?: boolean | null
           created_at?: string | null
           desktop_notifications?: boolean | null
+          email?: string | null
           email_notifications?: boolean | null
           first_login?: boolean | null
           id?: string
