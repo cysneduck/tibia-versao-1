@@ -67,14 +67,13 @@ class SoundManager {
       // Use platform-specific command to play audio
       let command;
       if (this.platform === 'win32') {
-        // Windows: Use MediaPlayer (supports all WAV formats + MP3)
-        // Escape backslashes for PowerShell
+        // Windows: Use MediaPlayer with proper duration wait
         const escapedPath = soundPath.replace(/\\/g, '\\\\');
         
-        // MediaPlayer supports all audio formats unlike SoundPlayer
-        command = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${escapedPath}'); $player.Play(); Start-Sleep -Seconds 3"`;
+        // Wait for the full audio to play by checking NaturalDuration
+        command = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${escapedPath}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration"`;
         
-        console.log('[SoundManager] Windows MediaPlayer command (supports all formats)');
+        console.log('[SoundManager] Windows MediaPlayer command with duration wait');
       } else if (this.platform === 'darwin') {
         // macOS: use afplay
         command = `afplay "${soundPath}"`;

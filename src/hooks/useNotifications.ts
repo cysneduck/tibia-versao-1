@@ -21,6 +21,10 @@ interface Notification {
 }
 
 const POLL_INTERVAL = 5000; // 5 seconds
+const DUPLICATE_WINDOW = 1000; // 1 second - prevent duplicate processing
+
+// Module-level deduplication tracker to persist across component re-mounts
+const recentNotifications = new Map<string, number>();
 
 export const useNotifications = (userId: string | undefined, desktopNotificationsEnabled: boolean = true) => {
   const queryClient = useQueryClient();
@@ -80,6 +84,22 @@ export const useNotifications = (userId: string | undefined, desktopNotification
   // Centralized notification handler for both real-time and polling
   const handleNewNotification = useCallback((notification: Notification, source: 'realtime' | 'polling') => {
     console.log(`[${source}] Processing notification:`, notification.id, notification.type);
+    
+    // Check for duplicate processing within time window
+    const now = Date.now();
+    const lastSeen = recentNotifications.get(notification.id);
+    if (lastSeen && (now - lastSeen) < DUPLICATE_WINDOW) {
+      console.log(`[${source}] ⚠️ Skipping - duplicate detected within ${DUPLICATE_WINDOW}ms`);
+      return;
+    }
+    recentNotifications.set(notification.id, now);
+    
+    // Clean up old entries (older than 30 seconds)
+    for (const [id, timestamp] of recentNotifications.entries()) {
+      if (now - timestamp > 30000) {
+        recentNotifications.delete(id);
+      }
+    }
     
     // Only play sound if we haven't already
     if (soundedNotifications.current.has(notification.id)) {
