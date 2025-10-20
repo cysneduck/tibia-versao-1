@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,10 +43,20 @@ export default function Admin() {
   const { isMasterAdmin } = useAuth();
   const { hunteds, addHunted, removeHunted } = useHunteds();
 
-  const [guildHours, setGuildHours] = useState(settings?.guild_claim_hours || "2");
-  const [guildMinutes, setGuildMinutes] = useState(settings?.guild_claim_minutes || "15");
-  const [neutroHours, setNeutroHours] = useState(settings?.neutro_claim_hours || "1");
-  const [neutroMinutes, setNeutroMinutes] = useState(settings?.neutro_claim_minutes || "15");
+  const [guildHours, setGuildHours] = useState(settings?.guild_claim_hours ?? "2");
+  const [guildMinutes, setGuildMinutes] = useState(settings?.guild_claim_minutes ?? "30");
+  const [neutroHours, setNeutroHours] = useState(settings?.neutro_claim_hours ?? "1");
+  const [neutroMinutes, setNeutroMinutes] = useState(settings?.neutro_claim_minutes ?? "15");
+  
+  // Sync state with settings when they load
+  useEffect(() => {
+    if (settings) {
+      setGuildHours(settings.guild_claim_hours ?? "2");
+      setGuildMinutes(settings.guild_claim_minutes ?? "30");
+      setNeutroHours(settings.neutro_claim_hours ?? "1");
+      setNeutroMinutes(settings.neutro_claim_minutes ?? "15");
+    }
+  }, [settings]);
   
   const [huntedName, setHuntedName] = useState("");
   const [huntedReason, setHuntedReason] = useState("");
