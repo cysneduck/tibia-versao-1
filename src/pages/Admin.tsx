@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Users, MapPin, TrendingUp, Target, Trash2 } from "lucide-react";
+import { Users, MapPin, TrendingUp, Target, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/hooks/useAuth";
 import { useHunteds } from "@/hooks/useHunteds";
@@ -50,6 +50,10 @@ export default function Admin() {
   
   const [huntedName, setHuntedName] = useState("");
   const [huntedReason, setHuntedReason] = useState("");
+  
+  const [userSearch, setUserSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 10;
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +85,24 @@ export default function Admin() {
 
   const handleRemoveHunted = (id: string) => {
     removeHunted.mutate(id);
+  };
+
+  // Filter and paginate users
+  const filteredUsers = users?.filter((user: any) => {
+    const searchLower = userSearch.toLowerCase();
+    const emailMatch = user.email?.toLowerCase().includes(searchLower);
+    const characterMatch = user.activeCharacterName?.toLowerCase().includes(searchLower);
+    return emailMatch || characterMatch;
+  }) || [];
+
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
+
+  // Reset to page 1 when search changes
+  const handleSearchChange = (value: string) => {
+    setUserSearch(value);
+    setCurrentPage(1);
   };
 
   if (isLoading) {
@@ -346,8 +368,21 @@ export default function Admin() {
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Table>
+          <CardContent className="space-y-4">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by email or character name..."
+                value={userSearch}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Users Table */}
+            <div className="border rounded-lg">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Active Character</TableHead>
@@ -357,54 +392,93 @@ export default function Admin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users?.map((user: any) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium text-muted-foreground">
-                      {user.activeCharacterName || 'No character'}
-                    </TableCell>
-                    <TableCell className="font-medium">{user.email}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          user.role === "master_admin"
-                            ? "border-red-500 text-red-500"
-                            : user.role === "admin"
-                            ? "border-purple-500 text-purple-500"
-                            : user.role === "guild"
-                            ? "border-primary text-primary"
-                            : "border-secondary text-secondary"
-                        }
-                      >
-                        {user.role === "master_admin" 
-                          ? "Master Admin" 
-                          : user.role === "admin" 
-                          ? "Admin" 
-                          : user.role === "guild" 
-                          ? "Guild" 
-                          : "Neutro"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={user.role}
-                        onValueChange={(value) => handleChangeUserRole(user.id, value)}
-                        disabled={user.role === "master_admin"}
-                      >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {isMasterAdmin && <SelectItem value="admin">Admin</SelectItem>}
-                          <SelectItem value="guild">Guild</SelectItem>
-                          <SelectItem value="neutro">Neutro</SelectItem>
-                        </SelectContent>
-                      </Select>
+                {paginatedUsers.length > 0 ? (
+                  paginatedUsers.map((user: any) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium text-muted-foreground">
+                        {user.activeCharacterName || 'No character'}
+                      </TableCell>
+                      <TableCell className="font-medium">{user.email}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            user.role === "master_admin"
+                              ? "border-red-500 text-red-500"
+                              : user.role === "admin"
+                              ? "border-purple-500 text-purple-500"
+                              : user.role === "guild"
+                              ? "border-primary text-primary"
+                              : "border-secondary text-secondary"
+                          }
+                        >
+                          {user.role === "master_admin" 
+                            ? "Master Admin" 
+                            : user.role === "admin" 
+                            ? "Admin" 
+                            : user.role === "guild" 
+                            ? "Guild" 
+                            : "Neutro"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={user.role}
+                          onValueChange={(value) => handleChangeUserRole(user.id, value)}
+                          disabled={user.role === "master_admin"}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {isMasterAdmin && <SelectItem value="admin">Admin</SelectItem>}
+                            <SelectItem value="guild">Guild</SelectItem>
+                            <SelectItem value="neutro">Neutro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                      No users found
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1} to {Math.min(startIndex + usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-medium">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
