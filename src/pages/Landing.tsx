@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Skull, Target, MapPin, Clock, Shield, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/landing-hero.png";
+import logo from "@/assets/logo.png";
 
 export default function Landing() {
   return (
@@ -11,7 +12,7 @@ export default function Landing() {
       <header className="border-b border-border bg-card/30 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <Skull className="h-8 w-8 text-primary" />
+            <img src={logo} alt="Claimed System Logo" className="h-8 w-8" />
             <h1 className="text-2xl font-bold glow-cyan">Claimed System</h1>
           </div>
           <Link to="/login">
