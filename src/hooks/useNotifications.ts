@@ -81,6 +81,20 @@ export const useNotifications = (userId: string | undefined, desktopNotification
     },
   });
 
+  const markAllAsRead = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', userId)
+        .eq('is_read', false);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+
   // Centralized notification handler for both real-time and polling
   const handleNewNotification = useCallback((notification: Notification, source: 'realtime' | 'polling') => {
     console.log(`[${source}] Processing notification:`, notification.id, notification.type);
@@ -282,6 +296,7 @@ export const useNotifications = (userId: string | undefined, desktopNotification
     isLoading,
     markAsRead,
     deleteNotification,
+    markAllAsRead,
     urgentClaim,
     setUrgentClaim,
   };

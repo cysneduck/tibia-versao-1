@@ -20,7 +20,7 @@ interface NotificationPanelProps {
 }
 
 export const NotificationPanel = ({ userId, desktopNotificationsEnabled = true }: NotificationPanelProps) => {
-  const { notifications, unreadCount, markAsRead, deleteNotification } = useNotifications(userId, desktopNotificationsEnabled);
+  const { notifications, unreadCount, markAsRead, deleteNotification, markAllAsRead } = useNotifications(userId, desktopNotificationsEnabled);
   const navigate = useNavigate();
 
   const getNotificationColor = (type: string) => {
@@ -63,10 +63,24 @@ export const NotificationPanel = ({ userId, desktopNotificationsEnabled = true }
       </SheetTrigger>
       <SheetContent className="w-[400px] sm:w-[540px]">
         <SheetHeader>
-          <SheetTitle>Notifications</SheetTitle>
-          <SheetDescription>
-            Stay updated on your respawn queue status
-          </SheetDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <SheetTitle>Notifications</SheetTitle>
+              <SheetDescription>
+                Stay updated on your respawn queue status
+              </SheetDescription>
+            </div>
+            {notifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllAsRead.mutate()}
+                disabled={markAllAsRead.isPending}
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-120px)] mt-4">
           {notifications.length === 0 ? (

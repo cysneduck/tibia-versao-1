@@ -76,7 +76,10 @@ export default function Dashboard() {
     });
   };
 
-  const duration = userRole === 'guild' ? '2 hours 15 minutes' : '1 hour 15 minutes';
+  // Duration based on user role (matches backend logic in claim_respawn function)
+  const duration = ['guild', 'admin', 'master_admin'].includes(userRole || '') 
+    ? '2 hours 30 minutes' 
+    : '1 hour 15 minutes';
 
   if (isLoading) {
     return (
