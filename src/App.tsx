@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { NotificationClearButton } from "@/components/NotificationClearButton";
 import { isElectron } from "@/utils/isElectron";
 import Login from "./pages/Login";
@@ -124,7 +123,6 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      {!isElectron() && <PWAInstallPrompt />}
       {isElectron() && <NotificationClearButton hasNotifications={true} />}
       <BrowserRouter>
         <Routes>
