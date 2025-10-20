@@ -330,6 +330,54 @@ export type Database = {
         }
         Relationships: []
       }
+      tickets: {
+        Row: {
+          admin_notes: string | null
+          category: Database["public"]["Enums"]["ticket_category"]
+          created_at: string
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at: string | null
+          resolved_by: string | null
+          screenshot_urls: string[] | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          category: Database["public"]["Enums"]["ticket_category"]
+          created_at?: string
+          description: string
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at?: string | null
+          resolved_by?: string | null
+          screenshot_urls?: string[] | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at?: string | null
+          resolved_by?: string | null
+          screenshot_urls?: string[] | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -415,6 +463,9 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "guild" | "neutro" | "master_admin"
+      ticket_category: "bug" | "suggestion" | "ks_report" | "other"
+      ticket_priority: "low" | "medium" | "high" | "urgent"
+      ticket_status: "open" | "in_progress" | "resolved" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -543,6 +594,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "guild", "neutro", "master_admin"],
+      ticket_category: ["bug", "suggestion", "ks_report", "other"],
+      ticket_priority: ["low", "medium", "high", "urgent"],
+      ticket_status: ["open", "in_progress", "resolved", "closed"],
     },
   },
 } as const

@@ -32,21 +32,27 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Users, MapPin, TrendingUp, Target, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, MapPin, TrendingUp, Target, Trash2, Search, ChevronLeft, ChevronRight, TicketIcon } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/hooks/useAuth";
 import { useHunteds } from "@/hooks/useHunteds";
+import { useAdminTickets } from "@/hooks/useAdminTickets";
+import { AdminTicketDialog } from "@/components/AdminTicketDialog";
 import { format } from "date-fns";
 
 export default function Admin() {
   const { users, settings, stats, isLoading, updateUserRole, updateSystemSetting } = useAdmin();
   const { isMasterAdmin } = useAuth();
   const { hunteds, addHunted, removeHunted } = useHunteds();
+  const { tickets: adminTickets, stats: ticketStats } = useAdminTickets();
 
   const [guildHours, setGuildHours] = useState(settings?.guild_claim_hours ?? "2");
   const [guildMinutes, setGuildMinutes] = useState(settings?.guild_claim_minutes ?? "30");
   const [neutroHours, setNeutroHours] = useState(settings?.neutro_claim_hours ?? "1");
   const [neutroMinutes, setNeutroMinutes] = useState(settings?.neutro_claim_minutes ?? "15");
+  
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [ticketFilter, setTicketFilter] = useState<string>("all");
   
   // Sync state with settings when they load
   useEffect(() => {
@@ -365,6 +371,153 @@ export default function Admin() {
           </CardContent>
         </Card>
 
+        {/* Ticket Management */}
+        <Card className="border-border bg-card/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TicketIcon className="h-5 w-5" />
+              Support Tickets Management
+            </CardTitle>
+            <CardDescription>
+              Manage and resolve user support tickets
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Ticket Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="p-4 rounded-lg bg-muted/50">
+                <p className="text-sm text-muted-foreground">Total Tickets</p>
+                <p className="text-2xl font-bold">{ticketStats?.total || 0}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                <p className="text-sm text-muted-foreground">Open</p>
+                <p className="text-2xl font-bold text-yellow-500">{ticketStats?.open || 0}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <p className="text-sm text-muted-foreground">In Progress</p>
+                <p className="text-2xl font-bold text-blue-500">{ticketStats?.inProgress || 0}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                <p className="text-sm text-muted-foreground">Resolved</p>
+                <p className="text-2xl font-bold text-green-500">{ticketStats?.resolved || 0}</p>
+              </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex gap-2">
+              <Button
+                variant={ticketFilter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTicketFilter("all")}
+              >
+                All
+              </Button>
+              <Button
+                variant={ticketFilter === "open" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTicketFilter("open")}
+              >
+                Open
+              </Button>
+              <Button
+                variant={ticketFilter === "in_progress" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTicketFilter("in_progress")}
+              >
+                In Progress
+              </Button>
+              <Button
+                variant={ticketFilter === "resolved" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTicketFilter("resolved")}
+              >
+                Resolved
+              </Button>
+            </div>
+
+            {/* Tickets Table */}
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {adminTickets && adminTickets.length > 0 ? (
+                    adminTickets
+                      .filter(ticket => ticketFilter === "all" || ticket.status === ticketFilter)
+                      .map((ticket) => (
+                        <TableRow key={ticket.id}>
+                          <TableCell className="font-medium">
+                            {ticket.profiles.email}
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {ticket.title}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={
+                              ticket.category === 'bug' ? 'border-red-500 text-red-500' :
+                              ticket.category === 'suggestion' ? 'border-blue-500 text-blue-500' :
+                              ticket.category === 'ks_report' ? 'border-orange-500 text-orange-500' :
+                              'border-gray-500 text-gray-500'
+                            }>
+                              {ticket.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={
+                              ticket.priority === 'urgent' ? 'border-red-500 text-red-500' :
+                              ticket.priority === 'high' ? 'border-orange-500 text-orange-500' :
+                              ticket.priority === 'medium' ? 'border-yellow-500 text-yellow-500' :
+                              'border-gray-500 text-gray-500'
+                            }>
+                              {ticket.priority}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={
+                              ticket.status === 'open' ? 'border-yellow-500 text-yellow-500' :
+                              ticket.status === 'in_progress' ? 'border-blue-500 text-blue-500' :
+                              ticket.status === 'resolved' ? 'border-green-500 text-green-500' :
+                              'border-gray-500 text-gray-500'
+                            }>
+                              {ticket.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {format(new Date(ticket.created_at), "MMM dd, HH:mm")}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedTicket(ticket)}
+                            >
+                              View
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        No tickets yet
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* User Management */}
         <Card className="border-border bg-card/50">
           <CardHeader>
@@ -491,6 +644,13 @@ export default function Admin() {
             )}
           </CardContent>
         </Card>
+
+        {/* Admin Ticket Dialog */}
+        <AdminTicketDialog
+          ticket={selectedTicket}
+          open={!!selectedTicket}
+          onOpenChange={(open) => !open && setSelectedTicket(null)}
+        />
       </div>
     </DashboardLayout>
   );

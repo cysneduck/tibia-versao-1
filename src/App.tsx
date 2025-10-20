@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Planilhados from "./pages/Planilhados";
 import Profile from "./pages/Profile";
 import Hunteds from "./pages/Hunteds";
+import Tickets from "./pages/Tickets";
 import Admin from "./pages/Admin";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
@@ -160,6 +161,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Hunteds />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tickets"
+            element={
+              <ProtectedRoute>
+                <Tickets />
               </ProtectedRoute>
             }
           />
