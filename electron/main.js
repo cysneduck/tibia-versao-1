@@ -174,6 +174,14 @@ ipcMain.on(channels.CLOSE_NOTIFICATION, (event, id) => {
   notificationManager.closeNotification(id);
 });
 
+ipcMain.on(channels.CLOSE_NOTIFICATION_WINDOW, (event, id) => {
+  notificationManager.closeNotification(id);
+});
+
+ipcMain.on(channels.CLEAR_ALL_NOTIFICATIONS, () => {
+  notificationManager.closeAll();
+});
+
 // Sound System
 ipcMain.on(channels.PLAY_SOUND, (event, { soundType, priority }) => {
   console.log('[Main] PLAY_SOUND IPC received:', soundType, priority);

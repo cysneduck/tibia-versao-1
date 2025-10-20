@@ -8,6 +8,8 @@ export default {
   SHOW_NOTIFICATION: 'show-notification',
   SHOW_URGENT_CLAIM: 'show-urgent-claim',
   CLOSE_NOTIFICATION: 'close-notification',
+  CLOSE_NOTIFICATION_WINDOW: 'close-notification-window',
+  CLEAR_ALL_NOTIFICATIONS: 'clear-all-notifications',
   NOTIFICATION_CLICKED: 'notification-clicked',
   
   // Sound System

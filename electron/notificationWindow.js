@@ -27,7 +27,7 @@ class NotificationWindowManager {
     // Calculate position (bottom-right corner, stacked)
     const position = this.calculatePosition();
 
-    // Create notification window
+    // Create notification window with preload for close button
     const notificationWindow = new BrowserWindow({
       width: this.notificationWidth,
       height: this.notificationHeight,
@@ -42,6 +42,12 @@ class NotificationWindowManager {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
+        preload: `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+          const { contextBridge, ipcRenderer } = require('electron');
+          contextBridge.exposeInMainWorld('notificationAPI', {
+            close: () => ipcRenderer.send('close-notification-window', '${id}')
+          });
+        `)}`,
       },
     });
 
@@ -92,13 +98,29 @@ class NotificationWindowManager {
     const notificationWindow = this.notifications.get(id);
     if (!notificationWindow) return;
 
+    // Check if window is destroyed before accessing
+    if (notificationWindow.isDestroyed()) {
+      this.notifications.delete(id);
+      return;
+    }
+
     // Fade out
     let opacity = 1;
     const fadeOut = setInterval(() => {
+      // Check if window is still alive
+      if (notificationWindow.isDestroyed()) {
+        clearInterval(fadeOut);
+        this.notifications.delete(id);
+        this.repositionNotifications();
+        return;
+      }
+
       opacity -= 0.1;
       if (opacity <= 0) {
         clearInterval(fadeOut);
-        notificationWindow.close();
+        if (!notificationWindow.isDestroyed()) {
+          notificationWindow.close();
+        }
         this.notifications.delete(id);
         
         // Reposition remaining notifications
@@ -129,9 +151,11 @@ class NotificationWindowManager {
   repositionNotifications() {
     let index = 0;
     this.notifications.forEach((window) => {
-      const position = this.calculatePositionForIndex(index);
-      window.setPosition(position.x, position.y, true);
-      index++;
+      if (!window.isDestroyed()) {
+        const position = this.calculatePositionForIndex(index);
+        window.setPosition(position.x, position.y, true);
+        index++;
+      }
     });
   }
 
@@ -149,6 +173,7 @@ class NotificationWindowManager {
     const colors = {
       claim_ready: '#ef4444',
       claim_expiring: '#f59e0b',
+      priority_lost: '#f59e0b',
       queue_update: '#3b82f6',
       system_alert: '#8b5cf6',
       default: '#6b7280',
@@ -176,13 +201,14 @@ class NotificationWindowManager {
             background: rgba(17, 24, 39, 0.98);
             border-left: 4px solid ${color};
             border-radius: 12px;
-            padding: 16px;
+            padding: 16px 40px 16px 16px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
             height: 100px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            position: relative;
           }
           .title {
             color: white;
@@ -198,10 +224,36 @@ class NotificationWindowManager {
           .notification:hover {
             background: rgba(31, 41, 55, 0.98);
           }
+          .close-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+            transition: all 0.2s;
+            font-family: Arial, sans-serif;
+          }
+          .close-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+          }
         </style>
       </head>
       <body>
-        <div class="notification">
+        <div class="notification" onclick="if(event.target.className === 'notification') document.body.click()">
+          <button class="close-btn" onclick="event.stopPropagation(); window.notificationAPI.close()">×</button>
           <div class="title">${title}</div>
           <div class="message">${message}</div>
         </div>
@@ -211,7 +263,11 @@ class NotificationWindowManager {
   }
 
   closeAll() {
-    this.notifications.forEach((window) => window.close());
+    this.notifications.forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.close();
+      }
+    });
     this.notifications.clear();
     this.notificationQueue = [];
   }

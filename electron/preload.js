@@ -11,6 +11,7 @@ const channels = {
   SHOW_NOTIFICATION: 'show-notification',
   SHOW_URGENT_CLAIM: 'show-urgent-claim',
   CLOSE_NOTIFICATION: 'close-notification',
+  CLEAR_ALL_NOTIFICATIONS: 'clear-all-notifications',
   NOTIFICATION_CLICKED: 'notification-clicked',
   PLAY_SOUND: 'play-sound',
   STOP_SOUND: 'stop-sound',
@@ -46,6 +47,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showNotification: (data) => ipcRenderer.send(channels.SHOW_NOTIFICATION, data),
   showUrgentClaim: (data) => ipcRenderer.send(channels.SHOW_URGENT_CLAIM, data),
   closeNotification: (id) => ipcRenderer.send(channels.CLOSE_NOTIFICATION, id),
+  clearAllNotifications: () => ipcRenderer.send(channels.CLEAR_ALL_NOTIFICATIONS),
   onNotificationClicked: (callback) => ipcRenderer.on(channels.NOTIFICATION_CLICKED, callback),
   
   // Sounds

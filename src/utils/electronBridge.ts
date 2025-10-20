@@ -73,6 +73,11 @@ class ElectronBridge {
     this.api.closeNotification(id);
   }
 
+  clearAllNotifications(): void {
+    if (!this.isAvailable()) return;
+    this.api.clearAllNotifications();
+  }
+
   onNotificationClicked(callback: (data: any) => void): void {
     if (!this.isAvailable()) return;
     this.api.onNotificationClicked((_: any, data: any) => callback(data));

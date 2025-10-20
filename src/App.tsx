@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { NotificationClearButton } from "@/components/NotificationClearButton";
 import { isElectron } from "@/utils/isElectron";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
@@ -121,6 +122,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       {!isElectron() && <PWAInstallPrompt />}
+      {isElectron() && <NotificationClearButton hasNotifications={true} />}
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

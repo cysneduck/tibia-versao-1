@@ -42,6 +42,21 @@ export const useElectronNotifications = () => {
     console.log('[useElectronNotifications] - type:', type);
     console.log('[useElectronNotifications] - respawn_id:', respawn_id);
 
+    // Customize notification messages based on type
+    let customTitle = title;
+    let customMessage = message;
+    
+    if (type === 'claim_ready') {
+      customTitle = 'É Sua Vez!';
+      customMessage = 'Reivindique seu respawn agora, você tem 5 minutos de prioridade!';
+    } else if (type === 'claim_expiring') {
+      customTitle = 'Tempo Acabando!';
+      customMessage = 'Seu tempo está quase acabando no respawn!';
+    } else if (type === 'priority_lost') {
+      customTitle = 'Prioridade Perdida';
+      // Keep the original message for priority_lost as it contains respawn name
+    }
+
     // Determine priority
     let priority: 'high' | 'medium' | 'normal' = 'normal';
     if (type === 'claim_ready') {
@@ -51,43 +66,26 @@ export const useElectronNotifications = () => {
     }
     console.log('[useElectronNotifications] Calculated priority:', priority);
 
-    // Show urgent claim window for high priority
-    if (priority === 'high' && respawn_id) {
-      console.log('[useElectronNotifications] ✅ Conditions met for urgent claim window:');
-      console.log('[useElectronNotifications] - priority === "high":', priority === 'high');
-      console.log('[useElectronNotifications] - respawn_id exists:', !!respawn_id);
-      console.log('[useElectronNotifications] Calling electronBridge.showUrgentClaim...');
-      
-      // Calculate expiration (5 minutes from now)
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-      
-      electronBridge.showUrgentClaim({
-        claimCode: respawn_id.substring(0, 8),
-        claimName: title,
-        expiresAt,
-      });
-      console.log('[useElectronNotifications] ✅ showUrgentClaim called successfully');
+    // ALL notifications now use the toast-style notification
+    console.log('[useElectronNotifications] Calling electronBridge.showNotification...');
+    
+    // Show toast notification - sound will be played by main process
+    electronBridge.showNotification({
+      id,
+      title: customTitle,
+      message: customMessage,
+      type,
+      respawnId: respawn_id || undefined,
+      duration: priority === 'high' ? 10000 : 5000,
+    });
+    console.log('[useElectronNotifications] ✅ showNotification called successfully');
 
-      // Flash taskbar - sound will be played by main process
+    // Flash taskbar for high priority notifications
+    if (priority === 'high') {
       electronBridge.flashFrame(true);
-      console.log('[useElectronNotifications] ✅ flashFrame called');
-    } else {
-      console.log('[useElectronNotifications] ⚠️ Using regular notification (not urgent):');
-      console.log('[useElectronNotifications] - priority === "high":', priority === 'high');
-      console.log('[useElectronNotifications] - respawn_id exists:', !!respawn_id);
-      console.log('[useElectronNotifications] Calling electronBridge.showNotification...');
-      
-      // Show regular notification - sound will be played by main process
-      electronBridge.showNotification({
-        id,
-        title,
-        message,
-        type,
-        respawnId: respawn_id || undefined,
-        duration: priority === 'high' ? 10000 : 5000,
-      });
-      console.log('[useElectronNotifications] ✅ showNotification called successfully');
+      console.log('[useElectronNotifications] ✅ flashFrame called for high priority');
     }
+    
     console.log('[useElectronNotifications] ========================================');
   }, []);
 
