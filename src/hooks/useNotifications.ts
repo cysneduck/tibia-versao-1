@@ -83,6 +83,9 @@ export const useNotifications = (userId: string | undefined, desktopNotification
 
   const markAllAsRead = useMutation({
     mutationFn: async () => {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
@@ -92,6 +95,18 @@ export const useNotifications = (userId: string | undefined, desktopNotification
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      toast({
+        title: "Notifications cleared",
+        description: "All notifications have been marked as read",
+      });
+    },
+    onError: (error) => {
+      console.error('[markAllAsRead] Error:', error);
+      toast({
+        title: "Error clearing notifications",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
