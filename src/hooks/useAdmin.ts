@@ -11,40 +11,18 @@ export const useAdmin = () => {
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Use secure admin function to get user list with emails
+      const { data, error } = await supabase.rpc('get_admin_user_list');
       
-      if (profilesError) throw profilesError;
+      if (error) throw error;
 
-      // Fetch roles separately
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-      
-      if (rolesError) throw rolesError;
-
-      // Fetch all characters to map active character names
-      const { data: charactersData, error: charactersError } = await supabase
-        .from('characters')
-        .select('id, name, user_id');
-      
-      if (charactersError) throw charactersError;
-
-      // Map roles and active character names to users
-      return profilesData.map((user) => {
-        const userRole = rolesData.find((r) => r.user_id === user.id);
-        const activeCharacter = charactersData.find(
-          (char) => char.id === user.active_character_id
-        );
-        
-        return {
-          ...user,
-          role: userRole?.role || 'neutro',
-          activeCharacterName: activeCharacter?.name || 'No character',
-        };
-      });
+      return data.map((user) => ({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        active_character_id: user.active_character_id,
+        activeCharacterName: user.active_character_name || 'No character',
+      }));
     },
   });
 

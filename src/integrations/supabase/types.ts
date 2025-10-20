@@ -178,7 +178,6 @@ export type Database = {
           claim_reminders: boolean | null
           created_at: string | null
           desktop_notifications: boolean | null
-          email: string
           email_notifications: boolean | null
           first_login: boolean | null
           id: string
@@ -191,7 +190,6 @@ export type Database = {
           claim_reminders?: boolean | null
           created_at?: string | null
           desktop_notifications?: boolean | null
-          email: string
           email_notifications?: boolean | null
           first_login?: boolean | null
           id: string
@@ -204,7 +202,6 @@ export type Database = {
           claim_reminders?: boolean | null
           created_at?: string | null
           desktop_notifications?: boolean | null
-          email?: string
           email_notifications?: boolean | null
           first_login?: boolean | null
           id?: string
@@ -370,6 +367,16 @@ export type Database = {
       ensure_user_data: {
         Args: { p_user_id: string }
         Returns: undefined
+      }
+      get_admin_user_list: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active_character_id: string
+          active_character_name: string
+          email: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
       }
       handle_expired_claims: {
         Args: Record<PropertyKey, never>

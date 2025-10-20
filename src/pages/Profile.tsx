@@ -255,7 +255,7 @@ export default function Profile() {
 
               <div className="space-y-2">
                 <Label>Email</Label>
-                <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
             </div>
 
