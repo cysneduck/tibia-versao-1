@@ -101,6 +101,33 @@ export type Database = {
           },
         ]
       }
+      hunted_characters: {
+        Row: {
+          added_by: string | null
+          character_name: string
+          created_at: string
+          id: string
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string | null
+          character_name: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string | null
+          character_name?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string | null

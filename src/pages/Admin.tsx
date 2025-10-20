@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -20,18 +21,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, MapPin, TrendingUp } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Users, MapPin, TrendingUp, Target, Trash2 } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/hooks/useAuth";
+import { useHunteds } from "@/hooks/useHunteds";
+import { format } from "date-fns";
 
 export default function Admin() {
   const { users, settings, stats, isLoading, updateUserRole, updateSystemSetting } = useAdmin();
   const { isMasterAdmin } = useAuth();
+  const { hunteds, addHunted, removeHunted } = useHunteds();
 
   const [guildHours, setGuildHours] = useState(settings?.guild_claim_hours || "2");
   const [guildMinutes, setGuildMinutes] = useState(settings?.guild_claim_minutes || "15");
   const [neutroHours, setNeutroHours] = useState(settings?.neutro_claim_hours || "1");
   const [neutroMinutes, setNeutroMinutes] = useState(settings?.neutro_claim_minutes || "15");
+  
+  const [huntedName, setHuntedName] = useState("");
+  const [huntedReason, setHuntedReason] = useState("");
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +62,25 @@ export default function Admin() {
 
   const handleChangeUserRole = (userId: string, newRole: string) => {
     updateUserRole.mutate({ userId, newRole });
+  };
+
+  const handleAddHunted = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!huntedName.trim()) return;
+    
+    addHunted.mutate(
+      { character_name: huntedName.trim(), reason: huntedReason.trim() || undefined },
+      {
+        onSuccess: () => {
+          setHuntedName("");
+          setHuntedReason("");
+        }
+      }
+    );
+  };
+
+  const handleRemoveHunted = (id: string) => {
+    removeHunted.mutate(id);
   };
 
   if (isLoading) {
@@ -184,6 +221,115 @@ export default function Admin() {
                 Save Settings
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Hunted Characters Management */}
+        <Card className="border-border bg-card/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Hunted Characters Management
+            </CardTitle>
+            <CardDescription>
+              Add or remove characters from the hunted list
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Add Hunted Form */}
+            <form onSubmit={handleAddHunted} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="huntedName">Character Name *</Label>
+                  <Input
+                    id="huntedName"
+                    placeholder="Enter character name"
+                    value={huntedName}
+                    onChange={(e) => setHuntedName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="huntedReason">Reason (Optional)</Label>
+                  <Textarea
+                    id="huntedReason"
+                    placeholder="Why is this character hunted?"
+                    value={huntedReason}
+                    onChange={(e) => setHuntedReason(e.target.value)}
+                    rows={1}
+                  />
+                </div>
+              </div>
+              <Button type="submit" disabled={addHunted.isPending || !huntedName.trim()}>
+                Add to Hunted List
+              </Button>
+            </form>
+
+            {/* Hunted Characters Table */}
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Character Name</TableHead>
+                    <TableHead>Reason</TableHead>
+                    <TableHead>Added On</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {hunteds && hunteds.length > 0 ? (
+                    hunteds.map((hunted) => (
+                      <TableRow key={hunted.id}>
+                        <TableCell className="font-medium">{hunted.character_name}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {hunted.reason || "No reason provided"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {format(new Date(hunted.created_at), "MMM dd, yyyy HH:mm")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remove from hunted list?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to remove {hunted.character_name} from the hunted list?
+                                  This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleRemoveHunted(hunted.id)}
+                                  className="bg-destructive hover:bg-destructive/90"
+                                >
+                                  Remove
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        No hunted characters yet
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 
