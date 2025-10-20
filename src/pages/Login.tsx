@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Shield, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AuthLayout } from "@/components/AuthLayout";
+import logo from "@/assets/logo.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -87,8 +87,21 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout>
-      <div className="w-full max-w-md space-y-4">
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="w-full p-4 border-b border-border">
+        <div 
+          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity w-fit"
+          onClick={() => navigate("/")}
+        >
+          <img src={logo} alt="Claimed System Logo" className="h-10 w-10" />
+          <h1 className="text-2xl font-bold text-primary glow-cyan">Claimed System</h1>
+        </div>
+      </header>
+
+      {/* Login Content */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-4">
         <Card className="border-border bg-card/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-2xl">
@@ -213,8 +226,9 @@ export default function Login() {
             <ExternalLink className="h-4 w-4 mr-2" />
             Request Access
           </Button>
+          </div>
         </div>
       </div>
-    </AuthLayout>
+    </div>
   );
 }
