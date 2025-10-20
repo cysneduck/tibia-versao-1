@@ -7,6 +7,7 @@ export interface HuntedCharacter {
   id: string;
   character_name: string;
   added_by: string | null;
+  added_by_email: string | null;
   reason: string | null;
   created_at: string;
   updated_at: string;
@@ -20,13 +21,30 @@ export const useHunteds = () => {
   const { data: hunteds, isLoading } = useQuery({
     queryKey: ['hunted-characters'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: huntedData, error: huntedError } = await supabase
         .from('hunted_characters')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as HuntedCharacter[];
+      if (huntedError) throw huntedError;
+
+      // Get unique admin IDs
+      const adminIds = [...new Set(huntedData?.map(h => h.added_by).filter(Boolean))] as string[];
+      
+      // Fetch admin emails
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .in('id', adminIds);
+
+      // Map profiles to a lookup object
+      const profileMap = new Map(profiles?.map(p => [p.id, p.email]) || []);
+
+      // Combine data
+      return huntedData.map(item => ({
+        ...item,
+        added_by_email: item.added_by ? profileMap.get(item.added_by) || null : null
+      })) as HuntedCharacter[];
     },
   });
 

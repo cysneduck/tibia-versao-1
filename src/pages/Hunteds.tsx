@@ -3,9 +3,17 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Target, Search, AlertTriangle } from "lucide-react";
+import { Search, AlertTriangle } from "lucide-react";
 import { useHunteds } from "@/hooks/useHunteds";
 import { format } from "date-fns";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function Hunteds() {
   const { hunteds, isLoading } = useHunteds();
@@ -47,36 +55,38 @@ export default function Hunteds() {
 
         {/* Hunted Characters List */}
         {filteredHunteds && filteredHunteds.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredHunteds.map((hunted) => (
-              <Card key={hunted.id} className="border-border bg-card/50 hover:bg-card/70 transition-colors">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <Target className="h-5 w-5 text-destructive" />
-                      <CardTitle className="text-lg">{hunted.character_name}</CardTitle>
-                    </div>
-                    <Badge variant="destructive" className="ml-2">
-                      Hunted
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {hunted.reason && (
-                    <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground font-medium">Reason:</p>
-                      <p className="text-sm text-foreground">{hunted.reason}</p>
-                    </div>
-                  )}
-                  <div className="pt-2 border-t border-border">
-                    <p className="text-xs text-muted-foreground">
-                      Added on {format(new Date(hunted.created_at), "MMM dd, yyyy 'at' HH:mm")}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Card className="border-border bg-card/50">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Character Name</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Added By</TableHead>
+                  <TableHead>Date Added</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredHunteds.map((hunted) => (
+                  <TableRow key={hunted.id}>
+                    <TableCell className="font-medium">{hunted.character_name}</TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {hunted.reason || <span className="text-muted-foreground italic">No reason provided</span>}
+                    </TableCell>
+                    <TableCell>
+                      {hunted.added_by_email || <span className="text-muted-foreground italic">Unknown</span>}
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(hunted.created_at), "MMM dd, yyyy HH:mm")}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="destructive">Hunted</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
         ) : (
           <Card className="border-border bg-card/50">
             <CardContent className="flex flex-col items-center justify-center py-12">
