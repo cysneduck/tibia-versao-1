@@ -74,7 +74,7 @@ export default function Hunteds() {
                       {hunted.reason || <span className="text-muted-foreground italic">No reason provided</span>}
                     </TableCell>
                     <TableCell>
-                      {hunted.added_by_email || <span className="text-muted-foreground italic">Unknown</span>}
+                      {hunted.added_by_character_name || <span className="text-muted-foreground italic">Unknown</span>}
                     </TableCell>
                     <TableCell>
                       {format(new Date(hunted.created_at), "MMM dd, yyyy HH:mm")}

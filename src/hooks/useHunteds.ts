@@ -7,7 +7,7 @@ export interface HuntedCharacter {
   id: string;
   character_name: string;
   added_by: string | null;
-  added_by_email: string | null;
+  added_by_character_name: string | null;
   reason: string | null;
   created_at: string;
   updated_at: string;
@@ -31,19 +31,31 @@ export const useHunteds = () => {
       // Get unique admin IDs
       const adminIds = [...new Set(huntedData?.map(h => h.added_by).filter(Boolean))] as string[];
       
-      // Fetch admin emails
+      // Fetch admin profiles with their active character IDs
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, email')
+        .select('id, active_character_id')
         .in('id', adminIds);
 
-      // Map profiles to a lookup object
-      const profileMap = new Map(profiles?.map(p => [p.id, p.email]) || []);
+      // Get character IDs
+      const characterIds = [...new Set(profiles?.map(p => p.active_character_id).filter(Boolean))] as string[];
+
+      // Fetch character names
+      const { data: characters } = await supabase
+        .from('characters')
+        .select('id, name')
+        .in('id', characterIds);
+
+      // Create lookup maps
+      const characterMap = new Map(characters?.map(c => [c.id, c.name]) || []);
+      const profileCharacterMap = new Map(
+        profiles?.map(p => [p.id, p.active_character_id ? characterMap.get(p.active_character_id) : null]) || []
+      );
 
       // Combine data
       return huntedData.map(item => ({
         ...item,
-        added_by_email: item.added_by ? profileMap.get(item.added_by) || null : null
+        added_by_character_name: item.added_by ? profileCharacterMap.get(item.added_by) || null : null
       })) as HuntedCharacter[];
     },
   });
