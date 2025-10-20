@@ -96,12 +96,12 @@ export const TicketDialog = () => {
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bug">🐛 Bugs on the claimed system</SelectItem>
-                <SelectItem value="suggestion">💡 Suggestions</SelectItem>
-                <SelectItem value="ks_report">⚔️ KS Report</SelectItem>
-                <SelectItem value="other">📝 Others</SelectItem>
-              </SelectContent>
+            <SelectContent>
+              <SelectItem value="bug">Bugs on the claimed system</SelectItem>
+              <SelectItem value="suggestion">Suggestions</SelectItem>
+              <SelectItem value="ks_report">KS Report</SelectItem>
+              <SelectItem value="other">Others</SelectItem>
+            </SelectContent>
             </Select>
           </div>
 
