@@ -136,6 +136,9 @@ export type Database = {
           character_name: string
           created_at: string
           id: string
+          is_online: boolean | null
+          last_checked: string | null
+          last_seen_online: string | null
           reason: string | null
           updated_at: string
         }
@@ -144,6 +147,9 @@ export type Database = {
           character_name: string
           created_at?: string
           id?: string
+          is_online?: boolean | null
+          last_checked?: string | null
+          last_seen_online?: string | null
           reason?: string | null
           updated_at?: string
         }
@@ -152,6 +158,9 @@ export type Database = {
           character_name?: string
           created_at?: string
           id?: string
+          is_online?: boolean | null
+          last_checked?: string | null
+          last_seen_online?: string | null
           reason?: string | null
           updated_at?: string
         }
@@ -200,6 +209,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      online_check_logs: {
+        Row: {
+          check_timestamp: string
+          created_at: string | null
+          duration_ms: number
+          error_message: string | null
+          id: string
+          success: boolean
+          total_hunted: number
+          total_online: number
+        }
+        Insert: {
+          check_timestamp?: string
+          created_at?: string | null
+          duration_ms: number
+          error_message?: string | null
+          id?: string
+          success?: boolean
+          total_hunted: number
+          total_online: number
+        }
+        Update: {
+          check_timestamp?: string
+          created_at?: string | null
+          duration_ms?: number
+          error_message?: string | null
+          id?: string
+          success?: boolean
+          total_hunted?: number
+          total_online?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

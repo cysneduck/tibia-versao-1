@@ -11,6 +11,9 @@ export interface HuntedCharacter {
   reason: string | null;
   created_at: string;
   updated_at: string;
+  is_online: boolean;
+  last_seen_online: string | null;
+  last_checked: string | null;
 }
 
 export const useHunteds = () => {

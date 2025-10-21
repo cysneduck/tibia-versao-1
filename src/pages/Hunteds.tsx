@@ -3,9 +3,9 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertTriangle } from "lucide-react";
+import { Search, AlertTriangle, Activity } from "lucide-react";
 import { useHunteds } from "@/hooks/useHunteds";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   Table,
   TableBody,
@@ -14,14 +14,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function Hunteds() {
   const { hunteds, isLoading } = useHunteds();
   const [searchTerm, setSearchTerm] = useState("");
+  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
-  const filteredHunteds = hunteds?.filter(hunted =>
-    hunted.character_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredHunteds = hunteds
+    ?.filter(hunted => 
+      hunted.character_name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    ?.filter(hunted => 
+      !showOnlineOnly || hunted.is_online
+    )
+    ?.sort((a, b) => {
+      // Sort by online status first (online first)
+      if (a.is_online && !b.is_online) return -1;
+      if (!a.is_online && b.is_online) return 1;
+      // Then by last seen online
+      if (a.last_seen_online && b.last_seen_online) {
+        return new Date(b.last_seen_online).getTime() - new Date(a.last_seen_online).getTime();
+      }
+      return 0;
+    });
 
   if (isLoading) {
     return (
@@ -41,16 +58,29 @@ export default function Hunteds() {
           <p className="text-muted-foreground">Characters currently being hunted</p>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search hunted characters..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search hunted characters..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="online-only"
+              checked={showOnlineOnly}
+              onCheckedChange={setShowOnlineOnly}
+            />
+            <Label htmlFor="online-only" className="cursor-pointer whitespace-nowrap">
+              <Activity className="inline h-4 w-4 mr-1 text-success" />
+              Online Only
+            </Label>
+          </div>
         </div>
 
         {/* Hunted Characters List */}
@@ -60,16 +90,47 @@ export default function Hunteds() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Character Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Seen</TableHead>
                   <TableHead>Reason</TableHead>
                   <TableHead>Added By</TableHead>
                   <TableHead>Date Added</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredHunteds.map((hunted) => (
-                  <TableRow key={hunted.id}>
+                  <TableRow 
+                    key={hunted.id}
+                    className={hunted.is_online ? "bg-success/5" : ""}
+                  >
                     <TableCell className="font-medium">{hunted.character_name}</TableCell>
+                    <TableCell>
+                      {hunted.is_online ? (
+                        <Badge variant="default" className="bg-success text-success-foreground">
+                          <Activity className="h-3 w-3 mr-1 animate-pulse" />
+                          Online
+                        </Badge>
+                      ) : hunted.last_checked ? (
+                        <Badge variant="secondary">
+                          Offline
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">
+                          Unknown
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {hunted.last_seen_online ? (
+                        <span className="text-muted-foreground">
+                          {formatDistanceToNow(new Date(hunted.last_seen_online), { addSuffix: true })}
+                        </span>
+                      ) : hunted.last_checked ? (
+                        <span className="text-muted-foreground italic">Never seen online</span>
+                      ) : (
+                        <span className="text-muted-foreground italic">Not checked yet</span>
+                      )}
+                    </TableCell>
                     <TableCell className="max-w-xs truncate">
                       {hunted.reason || <span className="text-muted-foreground italic">No reason provided</span>}
                     </TableCell>
@@ -78,9 +139,6 @@ export default function Hunteds() {
                     </TableCell>
                     <TableCell>
                       {format(new Date(hunted.created_at), "MMM dd, yyyy HH:mm")}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="destructive">Hunted</Badge>
                     </TableCell>
                   </TableRow>
                 ))}
