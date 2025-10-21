@@ -16,7 +16,7 @@ export class NotificationSound {
     }
   }
   
-  // Play notification sound with different frequencies for different priorities
+  // Play notification sound with different priorities
   static play(priority: 'high' | 'medium' | 'normal' = 'normal') {
     // Use Electron native sounds if available
     if (isElectron()) {
@@ -29,18 +29,35 @@ export class NotificationSound {
       return;
     }
 
-    // Fallback to Web Audio API for browser
+    // Use actual audio files in browser
+    const soundFiles = {
+      high: '/sounds/urgent-claim.wav',
+      medium: '/sounds/normal-claim.wav',
+      normal: '/sounds/normal-claim.wav',
+    };
+
+    const audio = new Audio(soundFiles[priority]);
+    audio.volume = 0.7;
+    
+    audio.play().catch((error) => {
+      console.warn('Failed to play notification sound:', error);
+      // Fallback to Web Audio API synthetic tones
+      this.playFallbackSound(priority);
+    });
+  }
+
+  // Fallback synthetic sound using Web Audio API
+  private static playFallbackSound(priority: 'high' | 'medium' | 'normal') {
     this.init();
     if (!this.audioContext) return;
     
     const oscillator = this.audioContext.createOscillator();
     const gainNode = this.audioContext.createGain();
     
-    // Different frequencies for different priorities
     const frequencies = {
-      high: [800, 1000, 1200], // Ascending tones (urgent)
-      medium: [600, 800], // Two-tone
-      normal: [800] // Single tone
+      high: [800, 1000, 1200],
+      medium: [600, 800],
+      normal: [800]
     };
     
     const tones = frequencies[priority];
@@ -49,20 +66,17 @@ export class NotificationSound {
     oscillator.connect(gainNode);
     gainNode.connect(this.audioContext.destination);
     
-    // Configure sound
-    oscillator.type = 'sine'; // Smooth, pleasant tone
+    oscillator.type = 'sine';
     gainNode.gain.setValueAtTime(0, currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, currentTime + 0.01); // Fade in
+    gainNode.gain.linearRampToValueAtTime(0.3, currentTime + 0.01);
     
     oscillator.start(currentTime);
     
-    // Play sequence of tones
-    tones.forEach((freq, index) => {
+    tones.forEach((freq) => {
       oscillator.frequency.setValueAtTime(freq, currentTime);
-      currentTime += 0.15; // 150ms per tone
+      currentTime += 0.15;
     });
     
-    // Fade out
     gainNode.gain.linearRampToValueAtTime(0, currentTime + 0.1);
     oscillator.stop(currentTime + 0.1);
   }
