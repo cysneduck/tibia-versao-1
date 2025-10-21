@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Star } from "lucide-react";
+import { Search, Heart } from "lucide-react";
 
 interface FilterBarProps {
   searchQuery: string;
@@ -66,14 +66,10 @@ export const FilterBar = ({
       {onToggleFavoritesOnly && (
         <Button
           variant={showFavoritesOnly ? "default" : "outline"}
-          className={`w-full md:w-auto ${
-            showFavoritesOnly 
-              ? 'bg-yellow-500 hover:bg-yellow-600 text-black' 
-              : 'border-yellow-500 text-yellow-500 hover:bg-yellow-500/10'
-          }`}
+          className="w-full md:w-auto"
           onClick={onToggleFavoritesOnly}
         >
-          <Star 
+          <Heart 
             className="h-4 w-4 mr-2" 
             fill={showFavoritesOnly ? 'currentColor' : 'none'}
           />
