@@ -23,9 +23,13 @@
   "nsis": {
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
+    "allowElevation": true,
+    "perMachine": false,
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
-    "shortcutName": "Claimed System"
+    "shortcutName": "Claimed System",
+    "runAfterFinish": false,
+    "deleteAppDataOnUninstall": false
   },
   "mac": {
     "target": [
