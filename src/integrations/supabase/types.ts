@@ -101,6 +101,35 @@ export type Database = {
           },
         ]
       }
+      favorite_respawns: {
+        Row: {
+          created_at: string | null
+          id: string
+          respawn_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          respawn_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          respawn_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_respawns_respawn_id_fkey"
+            columns: ["respawn_id"]
+            isOneToOne: false
+            referencedRelation: "respawns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hunted_characters: {
         Row: {
           added_by: string | null

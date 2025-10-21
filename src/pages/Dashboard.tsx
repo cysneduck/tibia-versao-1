@@ -12,18 +12,21 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueue } from "@/hooks/useQueue";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useFavorites } from "@/hooks/useFavorites";
 
 export default function Dashboard() {
   const { user, userRole } = useAuth();
-  const { respawns, isLoading } = useRespawns();
+  const { respawns, isLoading } = useRespawns(user?.id);
   const { claimRespawn, releaseClaim } = useClaims(user?.id);
   const { profile, characters } = useProfile(user?.id);
   const { queueData, joinQueue, leaveQueue } = useQueue(user?.id);
   const { urgentClaim, setUrgentClaim } = useNotifications(user?.id, profile?.desktop_notifications ?? true);
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites(user?.id);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [claimDialogOpen, setClaimDialogOpen] = useState(false);
   const [releaseDialogOpen, setReleaseDialogOpen] = useState(false);
   const [selectedRespawn, setSelectedRespawn] = useState<any>(null);
@@ -37,8 +40,9 @@ export default function Dashboard() {
     const matchesStatus = selectedStatus === "all" || 
                          (selectedStatus === "available" && !respawn.claim) ||
                          (selectedStatus === "claimed" && respawn.claim);
+    const matchesFavorite = !showFavoritesOnly || respawn.is_favorite;
     
-    return matchesSearch && matchesCity && matchesStatus;
+    return matchesSearch && matchesCity && matchesStatus && matchesFavorite;
   });
 
   const groupedRespawns = filteredRespawns.reduce((acc, respawn) => {
@@ -76,6 +80,14 @@ export default function Dashboard() {
     });
   };
 
+  const handleToggleFavorite = (respawnId: string) => {
+    if (isFavorite(respawnId)) {
+      removeFavorite.mutate(respawnId);
+    } else {
+      addFavorite.mutate(respawnId);
+    }
+  };
+
   // Duration based on user role (matches backend logic in claim_respawn function)
   const duration = ['guild', 'admin', 'master_admin'].includes(userRole || '') 
     ? '2 hours 30 minutes' 
@@ -109,6 +121,8 @@ export default function Dashboard() {
           selectedStatus={selectedStatus}
           onStatusChange={setSelectedStatus}
           cities={cities}
+          showFavoritesOnly={showFavoritesOnly}
+          onToggleFavoritesOnly={() => setShowFavoritesOnly(!showFavoritesOnly)}
         />
 
         <div className="space-y-8">
@@ -153,6 +167,7 @@ export default function Dashboard() {
                     userHasPriority,
                     priorityExpiresAt: priorityEntry?.priority_expires_at || null,
                     someoneElseHasPriority,
+                    is_favorite: r.is_favorite,
                   };
                 })}
                 userType={userRole as 'guild' | 'neutro'}
@@ -173,6 +188,7 @@ export default function Dashboard() {
                 onLeaveQueue={(respawn) => {
                   leaveQueue.mutate(respawn.respawnId);
                 }}
+                onToggleFavorite={handleToggleFavorite}
               />
             ))
           )}

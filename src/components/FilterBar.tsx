@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Star } from "lucide-react";
 
 interface FilterBarProps {
   searchQuery: string;
@@ -10,6 +11,8 @@ interface FilterBarProps {
   selectedStatus: string;
   onStatusChange: (value: string) => void;
   cities: string[];
+  showFavoritesOnly?: boolean;
+  onToggleFavoritesOnly?: () => void;
 }
 
 export const FilterBar = ({
@@ -20,6 +23,8 @@ export const FilterBar = ({
   selectedStatus,
   onStatusChange,
   cities,
+  showFavoritesOnly = false,
+  onToggleFavoritesOnly,
 }: FilterBarProps) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -57,6 +62,24 @@ export const FilterBar = ({
           <SelectItem value="claimed">Claimed</SelectItem>
         </SelectContent>
       </Select>
+
+      {onToggleFavoritesOnly && (
+        <Button
+          variant={showFavoritesOnly ? "default" : "outline"}
+          className={`w-full md:w-auto ${
+            showFavoritesOnly 
+              ? 'bg-yellow-500 hover:bg-yellow-600 text-black' 
+              : 'border-yellow-500 text-yellow-500 hover:bg-yellow-500/10'
+          }`}
+          onClick={onToggleFavoritesOnly}
+        >
+          <Star 
+            className="h-4 w-4 mr-2" 
+            fill={showFavoritesOnly ? 'currentColor' : 'none'}
+          />
+          Favorites Only
+        </Button>
+      )}
     </div>
   );
 };

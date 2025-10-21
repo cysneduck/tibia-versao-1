@@ -7,6 +7,7 @@ export interface RespawnWithClaim {
   code: string;
   name: string;
   city: string;
+  is_favorite?: boolean;
   claim?: {
     id: string;
     user_id: string;
@@ -16,9 +17,9 @@ export interface RespawnWithClaim {
   } | null;
 }
 
-export const useRespawns = () => {
+export const useRespawns = (userId?: string) => {
   const { data: respawns, isLoading, refetch } = useQuery({
-    queryKey: ['respawns'],
+    queryKey: ['respawns', userId],
     queryFn: async () => {
       // Fetch respawns
       const { data: respawnsData, error: respawnsError } = await supabase
@@ -38,11 +39,27 @@ export const useRespawns = () => {
 
       if (claimsError) throw claimsError;
 
-      // Join respawns with claims
+      // Fetch user favorites
+      let favoritesData: any[] = [];
+      if (userId) {
+        const { data, error } = await supabase
+          .from('favorite_respawns')
+          .select('respawn_id')
+          .eq('user_id', userId);
+        
+        if (!error && data) {
+          favoritesData = data;
+        }
+      }
+
+      // Join respawns with claims and favorites
       const respawnsWithClaims: RespawnWithClaim[] = respawnsData.map((respawn) => {
         const claim = claimsData.find((c) => c.respawn_id === respawn.id);
+        const isFavorite = favoritesData.some(f => f.respawn_id === respawn.id);
+        
         return {
           ...respawn,
+          is_favorite: isFavorite,
           claim: claim
             ? {
                 id: claim.id,
@@ -59,7 +76,7 @@ export const useRespawns = () => {
     },
   });
 
-  // Subscribe to real-time updates for claims AND queue - instant updates without refetch
+  // Subscribe to real-time updates for claims, queue, and favorites - instant updates without refetch
   useEffect(() => {
     const channel = supabase
       .channel('respawns-and-queue-changes')
@@ -70,8 +87,7 @@ export const useRespawns = () => {
           schema: 'public',
           table: 'claims',
         },
-        async (payload) => {
-          // Immediately refetch to get latest data - this is fast via realtime
+        async () => {
           await refetch();
         }
       )
@@ -82,8 +98,18 @@ export const useRespawns = () => {
           schema: 'public',
           table: 'respawn_queue',
         },
-        async (payload) => {
-          // Immediately refetch to get latest data - this is fast via realtime
+        async () => {
+          await refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'favorite_respawns',
+        },
+        async () => {
           await refetch();
         }
       )

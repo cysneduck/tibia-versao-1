@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Users } from "lucide-react";
+import { User, Users, Heart } from "lucide-react";
 import { CountdownTimer } from "./CountdownTimer";
 import { QueueModal } from "./QueueModal";
 import { PriorityTimer } from "./PriorityTimer";
@@ -37,6 +37,9 @@ interface RespawnCardProps {
   userHasPriority?: boolean;
   priorityExpiresAt?: string | null;
   someoneElseHasPriority?: boolean;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+  respawnId?: string;
 }
 
 export const RespawnCard = ({ 
@@ -60,7 +63,10 @@ export const RespawnCard = ({
   userId,
   userHasPriority = false,
   priorityExpiresAt,
-  someoneElseHasPriority = false
+  someoneElseHasPriority = false,
+  isFavorite = false,
+  onToggleFavorite,
+  respawnId
 }: RespawnCardProps) => {
   const [queueModalOpen, setQueueModalOpen] = useState(false);
   return (
@@ -69,7 +75,7 @@ export const RespawnCard = ({
         ? 'border-glow-red bg-card/50' 
         : 'border-glow-cyan bg-card/80 hover:border-glow-cyan'
     }`}>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 relative">
         <div className="flex items-start justify-between">
           <div>
             <Badge 
@@ -82,12 +88,33 @@ export const RespawnCard = ({
             </Badge>
             <CardTitle className="text-lg text-foreground">{name}</CardTitle>
           </div>
-          <Badge 
-            variant={isClaimed ? "destructive" : "default"}
-            className={isClaimed ? 'bg-secondary/20 text-secondary border-secondary' : 'bg-primary/20 text-primary border-primary'}
-          >
-            {isClaimed ? "Claimed" : "Available"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {onToggleFavorite && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite();
+                }}
+                className={`p-1 rounded-full transition-all duration-200 hover:scale-110 ${
+                  isFavorite 
+                    ? 'text-yellow-500' 
+                    : 'text-muted-foreground hover:text-yellow-500'
+                }`}
+                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              >
+                <Heart 
+                  className="h-5 w-5" 
+                  fill={isFavorite ? 'currentColor' : 'none'}
+                />
+              </button>
+            )}
+            <Badge 
+              variant={isClaimed ? "destructive" : "default"}
+              className={isClaimed ? 'bg-secondary/20 text-secondary border-secondary' : 'bg-primary/20 text-primary border-primary'}
+            >
+              {isClaimed ? "Claimed" : "Available"}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
