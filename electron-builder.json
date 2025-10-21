@@ -6,7 +6,7 @@
     "buildResources": "public"
   },
   "files": ["dist/**/*", "electron/**/*", "package.json"],
-  "asarUnpack": ["node_modules/electron-store/**/*"],
+  "asarUnpack": ["node_modules/electron-store/**/*", "node_modules/electron-updater/**/*"],
   "extraMetadata": {
     "main": "electron/main.js"
   },
