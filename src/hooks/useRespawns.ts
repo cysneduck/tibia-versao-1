@@ -76,27 +76,16 @@ export const useRespawns = (userId?: string) => {
     },
   });
 
-  // Subscribe to real-time updates for claims, queue, and favorites - instant updates without refetch
+  // Subscribe to real-time updates for claims and favorites - instant updates without refetch
   useEffect(() => {
     const channel = supabase
-      .channel('respawns-and-queue-changes')
+      .channel('respawns-realtime')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'claims',
-        },
-        async () => {
-          await refetch();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'respawn_queue',
         },
         async () => {
           await refetch();

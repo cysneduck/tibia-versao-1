@@ -158,24 +158,9 @@ export const useQueue = (userId: string | undefined) => {
           schema: 'public',
           table: 'respawn_queue',
         },
-        async (payload) => {
+        async () => {
           // Refetch immediately for instant updates across all users
           await queryClient.refetchQueries({ queryKey: ['respawn-queue'] });
-          
-          // Check if current user got priority
-          if (userId && payload.eventType === 'UPDATE' && payload.new.user_id === userId) {
-            if (payload.new.priority_expires_at && !payload.old.priority_expires_at) {
-              const expiresAt = new Date(payload.new.priority_expires_at);
-              const now = new Date();
-              const minutesLeft = Math.floor((expiresAt.getTime() - now.getTime()) / 60000);
-              
-              toast({
-                title: "It's your turn!",
-                description: `You have ${minutesLeft} minutes to claim this respawn!`,
-                duration: 10000,
-              });
-            }
-          }
         }
       )
       .subscribe();
@@ -183,7 +168,7 @@ export const useQueue = (userId: string | undefined) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, toast, userId]);
+  }, [queryClient]);
 
   // Client-side priority expiration check - runs every second for instant removal
   useEffect(() => {
