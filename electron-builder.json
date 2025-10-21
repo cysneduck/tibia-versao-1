@@ -5,11 +5,7 @@
     "output": "dist-electron",
     "buildResources": "public"
   },
-  "files": [
-    "dist/**/*",
-    "electron/**/*",
-    "package.json"
-  ],
+  "files": ["dist/**/*", "electron/**/*", "package.json", "node_modules/**/*"],
   "extraMetadata": {
     "main": "electron/main.js"
   },
@@ -56,10 +52,7 @@
     ]
   },
   "linux": {
-    "target": [
-      "AppImage",
-      "deb"
-    ],
+    "target": ["AppImage", "deb"],
     "icon": "public/pwa-512x512.png",
     "category": "Utility",
     "artifactName": "${productName}-${version}-${arch}.${ext}"
