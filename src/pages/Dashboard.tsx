@@ -45,7 +45,11 @@ export default function Dashboard() {
     return matchesSearch && matchesCity && matchesStatus && matchesFavorite;
   });
 
-  const groupedRespawns = filteredRespawns.reduce((acc, respawn) => {
+  // Extract favorites separately
+  const favoriteRespawns = filteredRespawns.filter(r => r.is_favorite);
+  const nonFavoriteRespawns = filteredRespawns.filter(r => !r.is_favorite);
+
+  const groupedRespawns = nonFavoriteRespawns.reduce((acc, respawn) => {
     if (!acc[respawn.city]) {
       acc[respawn.city] = [];
     }
@@ -126,12 +130,74 @@ export default function Dashboard() {
         />
 
         <div className="space-y-8">
-          {Object.keys(groupedRespawns).length === 0 ? (
+          {favoriteRespawns.length === 0 && Object.keys(groupedRespawns).length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">No respawns found matching your filters.</p>
             </div>
           ) : (
-            Object.entries(groupedRespawns).map(([city, cityRespawns]) => (
+            <>
+              {favoriteRespawns.length > 0 && (
+                <CitySection
+                  key="favorites"
+                  cityName="Favorites"
+                  isFavoritesSection={true}
+                  respawns={favoriteRespawns.map(r => {
+                    const queueEntries = queueData.filter(q => q.respawn_id === r.id);
+                    const userInQueue = queueEntries.find(q => q.user_id === user?.id);
+                    const queuePosition = userInQueue 
+                      ? queueEntries.findIndex(q => q.user_id === user?.id) + 1 
+                      : null;
+                    
+                    const priorityEntry = queueEntries.find(q => 
+                      q.priority_expires_at && new Date(q.priority_expires_at) > new Date()
+                    );
+                    const userHasPriority = priorityEntry?.user_id === user?.id;
+                    const someoneElseHasPriority = priorityEntry && priorityEntry.user_id !== user?.id;
+                    
+                    return {
+                      code: r.code,
+                      name: r.name,
+                      isClaimed: !!r.claim,
+                      claimedBy: r.claim?.character_name,
+                      characterName: r.claim?.character_name,
+                      timeRemaining: r.claim?.expires_at,
+                      respawnId: r.id,
+                      claimId: r.claim?.id,
+                      claim: r.claim,
+                      queueCount: queueEntries.length,
+                      userInQueue: !!userInQueue,
+                      queuePosition,
+                      nextInQueue: queueEntries[0]?.character_name,
+                      queueEntries: queueEntries,
+                      userHasPriority,
+                      priorityExpiresAt: priorityEntry?.priority_expires_at || null,
+                      someoneElseHasPriority,
+                      is_favorite: r.is_favorite,
+                    };
+                  })}
+                  userType={userRole as 'guild' | 'neutro'}
+                  userId={user?.id}
+                  onClaimClick={(respawn) => {
+                    setSelectedRespawn({ id: respawn.respawnId, ...respawn });
+                    setClaimDialogOpen(true);
+                  }}
+                  onReleaseClick={(respawn) => {
+                    setSelectedRespawn({ id: respawn.respawnId, ...respawn });
+                    setReleaseDialogOpen(true);
+                  }}
+                  onJoinQueue={(respawn) => {
+                    if (activeCharacter) {
+                      joinQueue.mutate({ respawnId: respawn.respawnId, characterId: activeCharacter.id });
+                    }
+                  }}
+                  onLeaveQueue={(respawn) => {
+                    leaveQueue.mutate(respawn.respawnId);
+                  }}
+                  onToggleFavorite={handleToggleFavorite}
+                />
+              )}
+              
+              {!showFavoritesOnly && Object.entries(groupedRespawns).map(([city, cityRespawns]) => (
               <CitySection
                 key={city}
                 cityName={city}
@@ -190,7 +256,8 @@ export default function Dashboard() {
                 }}
                 onToggleFavorite={handleToggleFavorite}
               />
-            ))
+            ))}
+            </>
           )}
         </div>
       </div>

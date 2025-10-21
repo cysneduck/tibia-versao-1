@@ -1,4 +1,5 @@
 import { RespawnCard } from "./RespawnCard";
+import { Heart } from "lucide-react";
 
 interface Respawn {
   code: string;
@@ -21,11 +22,12 @@ interface CitySectionProps {
   onLeaveQueue?: (respawn: any) => void;
   userId?: string;
   onToggleFavorite?: (respawnId: string) => void;
+  isFavoritesSection?: boolean;
 }
 
-export const CitySection = ({ cityName, respawns, userType, onClaimClick, onReleaseClick, onJoinQueue, onLeaveQueue, userId, onToggleFavorite }: CitySectionProps) => {
-  // Sort respawns: favorites first, then by code
-  const sortedRespawns = [...respawns].sort((a: any, b: any) => {
+export const CitySection = ({ cityName, respawns, userType, onClaimClick, onReleaseClick, onJoinQueue, onLeaveQueue, userId, onToggleFavorite, isFavoritesSection }: CitySectionProps) => {
+  // Sort respawns: favorites first, then by code (only for city sections, not favorites section)
+  const sortedRespawns = isFavoritesSection ? respawns : [...respawns].sort((a: any, b: any) => {
     if (a.is_favorite && !b.is_favorite) return -1;
     if (!a.is_favorite && b.is_favorite) return 1;
     return 0;
@@ -33,7 +35,8 @@ export const CitySection = ({ cityName, respawns, userType, onClaimClick, onRele
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-primary glow-cyan tracking-wide border-b border-border pb-2">
+      <h2 className="text-2xl font-bold text-primary glow-cyan tracking-wide border-b border-border pb-2 flex items-center gap-2">
+        {isFavoritesSection && <Heart className="h-6 w-6" fill="currentColor" />}
         {cityName}
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
