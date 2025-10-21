@@ -2,7 +2,7 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, AlertTriangle, Activity } from "lucide-react";
+import { Search, AlertTriangle } from "lucide-react";
 import { useHunteds } from "@/hooks/useHunteds";
 import { format } from "date-fns";
 import {
@@ -13,31 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 export default function Hunteds() {
   const { hunteds, isLoading } = useHunteds();
   const [searchTerm, setSearchTerm] = useState("");
-  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
-  const filteredHunteds = hunteds
-    ?.filter(hunted => 
-      hunted.character_name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    ?.filter(hunted => 
-      !showOnlineOnly || hunted.is_online
-    )
-    ?.sort((a, b) => {
-      // Sort by online status first (online first)
-      if (a.is_online && !b.is_online) return -1;
-      if (!a.is_online && b.is_online) return 1;
-      // Then by last seen online
-      if (a.last_seen_online && b.last_seen_online) {
-        return new Date(b.last_seen_online).getTime() - new Date(a.last_seen_online).getTime();
-      }
-      return 0;
-    });
+  const filteredHunteds = hunteds?.filter(hunted => 
+    hunted.character_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (isLoading) {
     return (
@@ -57,29 +40,16 @@ export default function Hunteds() {
           <p className="text-muted-foreground">Characters currently being hunted</p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search hunted characters..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              id="online-only"
-              checked={showOnlineOnly}
-              onCheckedChange={setShowOnlineOnly}
-            />
-            <Label htmlFor="online-only" className="cursor-pointer whitespace-nowrap">
-              <Activity className="inline h-4 w-4 mr-1 text-success" />
-              Online Only
-            </Label>
-          </div>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search hunted characters..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
         {/* Hunted Characters List */}
@@ -89,7 +59,6 @@ export default function Hunteds() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Character Name</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead>Reason</TableHead>
                   <TableHead>Added By</TableHead>
                   <TableHead>Date Added</TableHead>
@@ -97,27 +66,8 @@ export default function Hunteds() {
               </TableHeader>
               <TableBody>
                 {filteredHunteds.map((hunted) => (
-                  <TableRow 
-                    key={hunted.id}
-                    className={hunted.is_online ? "bg-success/5" : ""}
-                  >
+                  <TableRow key={hunted.id}>
                     <TableCell className="font-medium">{hunted.character_name}</TableCell>
-                    <TableCell>
-                      {hunted.is_online ? (
-                        <span className="text-success font-semibold flex items-center gap-1">
-                          <Activity className="h-4 w-4 animate-pulse" />
-                          Online
-                        </span>
-                      ) : hunted.last_checked ? (
-                        <span className="text-destructive font-semibold">
-                          Offline
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground italic">
-                          Unknown
-                        </span>
-                      )}
-                    </TableCell>
                     <TableCell className="max-w-xs truncate">
                       {hunted.reason || <span className="text-muted-foreground italic">No reason provided</span>}
                     </TableCell>

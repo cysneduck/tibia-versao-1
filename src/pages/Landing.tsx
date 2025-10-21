@@ -105,7 +105,7 @@ export default function Landing() {
 
           <Card className="p-6 bg-card/50 border-border hover:border-primary/50 transition-colors">
             <div className="mb-4">
-              <Shield className="h-12 w-12 text-primary" />
+              <Skull className="h-12 w-12 text-primary" />
             </div>
             <h4 className="text-xl font-bold mb-2">Hunted List</h4>
             <p className="text-muted-foreground">
@@ -115,7 +115,7 @@ export default function Landing() {
 
           <Card className="p-6 bg-card/50 border-border hover:border-primary/50 transition-colors">
             <div className="mb-4">
-              <Skull className="h-12 w-12 text-primary" />
+              <Shield className="h-12 w-12 text-primary" />
             </div>
             <h4 className="text-xl font-bold mb-2">Desktop & Web</h4>
             <p className="text-muted-foreground">
