@@ -8,12 +8,46 @@ const isElectron = () => {
 
 export class NotificationSound {
   private static audioContext: AudioContext | null = null;
+  private static unlocked: boolean = false;
   
   // Initialize Web Audio API
   static init() {
     if (!this.audioContext && typeof window !== 'undefined') {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
+  }
+
+  // Unlock audio context with user interaction (required for autoplay)
+  static async unlockAudio(): Promise<boolean> {
+    this.init();
+    if (!this.audioContext) return false;
+
+    try {
+      // Resume audio context
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+      
+      // Play a silent sound to unlock
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+      gainNode.gain.value = 0.001; // Nearly silent
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      oscillator.start(this.audioContext.currentTime);
+      oscillator.stop(this.audioContext.currentTime + 0.01);
+      
+      this.unlocked = true;
+      console.log('[NotificationSound] Audio unlocked successfully');
+      return true;
+    } catch (error) {
+      console.error('[NotificationSound] Failed to unlock audio:', error);
+      return false;
+    }
+  }
+
+  static isUnlocked(): boolean {
+    return this.unlocked;
   }
   
   // Play notification sound with different priorities

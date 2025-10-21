@@ -42,6 +42,7 @@ export default function Onboarding() {
   
   // Step 4: Notification Permission
   const [notificationDecision, setNotificationDecision] = useState<boolean | null>(null);
+  const [soundUnlocked, setSoundUnlocked] = useState(false);
 
   const validatePassword = (password: string): { valid: boolean; error?: string } => {
     if (password === '123123') {
@@ -128,6 +129,28 @@ export default function Onboarding() {
     }
   };
 
+  const handleUnlockSound = async () => {
+    setLoading(true);
+    try {
+      const success = await NotificationSound.unlockAudio();
+      
+      if (success) {
+        setSoundUnlocked(true);
+        // Play test sound
+        NotificationSound.play('high');
+        
+        toast({ 
+          title: "🔊 Som desbloqueado!", 
+          description: "Você ouvirá alertas sonoros como esse" 
+        });
+      }
+    } catch (error) {
+      console.error('Error unlocking sound:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleEnableNotifications = async () => {
     setLoading(true);
     try {
@@ -139,12 +162,9 @@ export default function Onboarding() {
         
         // Show success toast
         toast({ 
-          title: "✅ Notificações ativadas!", 
-          description: "Você receberá alertas importantes sobre respawns" 
+          title: "✅ Notificações desktop ativadas!", 
+          description: "Você receberá alertas visuais importantes" 
         });
-        
-        // Play test sound
-        NotificationSound.play('high');
         
         // Show test notification
         showNotification({
@@ -396,87 +416,128 @@ export default function Onboarding() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="h-5 w-5 text-primary" />
-                  Ative as Notificações
+                  Configure Alertas e Notificações
                 </CardTitle>
                 <CardDescription>
-                  Receba alertas quando for sua vez de clamar um respawn
+                  Para não perder sua vez, configure os alertas sonoros e notificações
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Mock notification preview */}
-                <div className="p-4 rounded-lg border-2 border-primary/30 bg-primary/5 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-md bg-primary/20">
-                      <Bell className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-foreground">🔥 É sua vez de clamar!</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        POI-3 Demon está disponível agora. Você tem prioridade!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Benefits list */}
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <Volume2 className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Som de alerta</p>
-                      <p className="text-xs text-muted-foreground">Mesmo com o navegador minimizado</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <Smartphone className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Notificações desktop</p>
-                      <p className="text-xs text-muted-foreground">Alertas visuais na sua área de trabalho</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <Clock className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Nunca perca sua vez</p>
-                      <p className="text-xs text-muted-foreground">Saiba exatamente quando clamar</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-lg bg-muted/30">
-                  <p className="text-sm text-muted-foreground">
-                    💡 <span className="font-medium text-foreground">Dica:</span> As notificações são essenciais para não perder claims. Você pode desativar depois nas configurações.
+                {/* Important warning */}
+                <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
+                  <p className="text-sm text-foreground">
+                    ⚠️ <span className="font-medium">Importante:</span> Os navegadores bloqueiam sons por padrão. Você precisa clicar no botão abaixo para habilitar os alertas sonoros.
                   </p>
                 </div>
 
-                {/* Action buttons */}
-                <div className="space-y-3">
-                  {!hasPermission && notificationDecision === null && (
-                    <>
+                {/* Step 1: Unlock Sound */}
+                <div className="p-4 rounded-lg border-2 border-border bg-card">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className={`p-2 rounded-md ${soundUnlocked ? 'bg-green-500/20' : 'bg-primary/20'}`}>
+                      <Volume2 className={`h-5 w-5 ${soundUnlocked ? 'text-green-500' : 'text-primary'}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        1. Habilitar Alertas Sonoros
+                        {soundUnlocked && <span className="text-xs bg-green-500/20 text-green-500 px-2 py-1 rounded">✓ Ativado</span>}
+                      </h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Sons especiais tocam quando for sua vez, mesmo com o navegador minimizado
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    onClick={handleUnlockSound} 
+                    className="w-full"
+                    disabled={loading || soundUnlocked}
+                    variant={soundUnlocked ? "outline" : "default"}
+                  >
+                    {soundUnlocked ? "✓ Som Habilitado" : "🔊 Clique para Testar o Som"}
+                  </Button>
+                </div>
+
+                {/* Step 2: Desktop Notifications */}
+                <div className="p-4 rounded-lg border-2 border-border bg-card">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className={`p-2 rounded-md ${notificationDecision === true ? 'bg-green-500/20' : 'bg-primary/20'}`}>
+                      <Bell className={`h-5 w-5 ${notificationDecision === true ? 'text-green-500' : 'text-primary'}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        2. Habilitar Notificações Desktop
+                        {notificationDecision === true && <span className="text-xs bg-green-500/20 text-green-500 px-2 py-1 rounded">✓ Ativado</span>}
+                        {notificationDecision === false && <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">Desativado</span>}
+                      </h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Alertas visuais aparecem na sua área de trabalho (opcional mas recomendado)
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {notificationDecision === null && (
+                    <div className="space-y-2">
                       <Button 
-                        onClick={handleEnableNotifications}
+                        onClick={handleEnableNotifications} 
                         className="w-full"
                         disabled={loading}
                       >
-                        {loading ? "Ativando..." : "🔔 Ativar Notificações"}
+                        📱 Ativar Notificações Desktop
                       </Button>
                       <Button 
-                        onClick={handleSkipNotifications}
-                        variant="ghost"
+                        onClick={handleSkipNotifications} 
+                        variant="outline"
                         className="w-full"
                         disabled={loading}
                       >
-                        Talvez mais tarde
+                        Pular (não recomendado)
                       </Button>
-                    </>
+                    </div>
                   )}
                   
-                  {(hasPermission || notificationDecision !== null) && (
-                    <Button onClick={handleComplete} className="w-full" disabled={loading}>
-                      {loading ? "Finalizando..." : "Começar a usar o sistema! 🚀"}
-                    </Button>
+                  {notificationDecision !== null && (
+                    <div className="p-3 rounded-lg bg-muted/30 text-sm text-muted-foreground">
+                      {notificationDecision 
+                        ? "✓ Você receberá notificações visuais quando for sua vez"
+                        : "⚠️ Você não receberá notificações visuais (pode ativar depois nas configurações)"
+                      }
+                    </div>
+                  )}
+                </div>
+
+                {/* Preview */}
+                <div className="p-4 rounded-lg border border-primary/30 bg-primary/5">
+                  <p className="text-xs text-muted-foreground mb-2">Exemplo de notificação:</p>
+                  <div className="flex items-start gap-3">
+                    <Bell className="h-4 w-4 text-primary mt-0.5" />
+                    <div>
+                      <p className="font-medium text-sm text-foreground">🔥 É sua vez de clamar!</p>
+                      <p className="text-xs text-muted-foreground">POI-3 Demon está disponível. Você tem prioridade!</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info box */}
+                <div className="p-4 rounded-lg bg-muted/30">
+                  <p className="text-sm text-muted-foreground">
+                    💡 <span className="font-medium text-foreground">Dica:</span> Recomendamos ativar ambos para não perder nenhum claim importante. Você pode ajustar depois nas configurações.
+                  </p>
+                </div>
+
+                {/* Continue button */}
+                <div className="space-y-3">
+                  <Button 
+                    className="w-full" 
+                    onClick={handleComplete} 
+                    disabled={loading || !soundUnlocked}
+                  >
+                    {loading ? "Finalizando..." : "Concluir e Começar a Usar 🚀"}
+                  </Button>
+                  
+                  {!soundUnlocked && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      ⚠️ Você precisa habilitar o som para continuar
+                    </p>
                   )}
                 </div>
               </CardContent>
