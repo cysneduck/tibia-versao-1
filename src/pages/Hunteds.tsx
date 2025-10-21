@@ -2,10 +2,9 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Search, AlertTriangle, Activity } from "lucide-react";
 import { useHunteds } from "@/hooks/useHunteds";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import {
   Table,
   TableBody,
@@ -91,7 +90,6 @@ export default function Hunteds() {
                 <TableRow>
                   <TableHead>Character Name</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Last Seen</TableHead>
                   <TableHead>Reason</TableHead>
                   <TableHead>Added By</TableHead>
                   <TableHead>Date Added</TableHead>
@@ -106,29 +104,18 @@ export default function Hunteds() {
                     <TableCell className="font-medium">{hunted.character_name}</TableCell>
                     <TableCell>
                       {hunted.is_online ? (
-                        <Badge variant="default" className="bg-success text-success-foreground">
-                          <Activity className="h-3 w-3 mr-1 animate-pulse" />
+                        <span className="text-success font-semibold flex items-center gap-1">
+                          <Activity className="h-4 w-4 animate-pulse" />
                           Online
-                        </Badge>
-                      ) : hunted.last_checked ? (
-                        <Badge variant="secondary">
-                          Offline
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">
-                          Unknown
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {hunted.last_seen_online ? (
-                        <span className="text-muted-foreground">
-                          {formatDistanceToNow(new Date(hunted.last_seen_online), { addSuffix: true })}
                         </span>
                       ) : hunted.last_checked ? (
-                        <span className="text-muted-foreground italic">Never seen online</span>
+                        <span className="text-destructive font-semibold">
+                          Offline
+                        </span>
                       ) : (
-                        <span className="text-muted-foreground italic">Not checked yet</span>
+                        <span className="text-muted-foreground italic">
+                          Unknown
+                        </span>
                       )}
                     </TableCell>
                     <TableCell className="max-w-xs truncate">
