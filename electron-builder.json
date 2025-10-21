@@ -5,7 +5,8 @@
     "output": "dist-electron",
     "buildResources": "public"
   },
-  "files": ["dist/**/*", "electron/**/*", "package.json", "node_modules/**/*"],
+  "files": ["dist/**/*", "electron/**/*", "package.json"],
+  "asarUnpack": ["node_modules/electron-store/**/*"],
   "extraMetadata": {
     "main": "electron/main.js"
   },
