@@ -38,54 +38,164 @@ Deno.serve(async (req) => {
 
     console.log(`Checking ${huntedChars.length} hunted characters...`);
 
-    // Fetch the online players page with browser-like headers
     const targetUrl = 'https://rubinot.com.br/?subtopic=worlds&world=Mystian';
-    const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Cache-Control': 'max-age=0',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch online players: ${response.status} ${response.statusText}`);
+    const homepageUrl = 'https://rubinot.com.br/';
+    
+    // Try multiple scraping strategies to bypass Cloudflare
+    const strategies = [
+      // Strategy 1: AllOrigins CORS proxy
+      { name: 'AllOrigins', url: `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, useProxy: true },
+      // Strategy 2: Direct with session and aggressive headers
+      { name: 'Direct+Session', url: targetUrl, useSession: true, useHeaders: true },
+      // Strategy 3: Direct without session
+      { name: 'Direct', url: targetUrl, useHeaders: true },
+    ];
+    
+    const userAgents = [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    ];
+    const userAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+    
+    let html = '';
+    let successStrategy = '';
+    
+    // Try each strategy until one works
+    for (const strategy of strategies) {
+      console.log(`Trying strategy: ${strategy.name}`);
+      let sessionCookies = '';
+      
+      try {
+        // Establish session if needed
+        if (strategy.useSession) {
+          console.log('Establishing session with homepage...');
+          try {
+            const homepageResponse = await fetch(homepageUrl, {
+              headers: {
+                'User-Agent': userAgent,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Cache-Control': 'max-age=0',
+                'DNT': '1',
+              },
+            });
+            
+            const setCookie = homepageResponse.headers.get('set-cookie');
+            if (setCookie) {
+              sessionCookies = setCookie.split(';')[0];
+              console.log('Session cookies obtained');
+            }
+            
+            // Random delay
+            await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
+          } catch (error) {
+            console.log('Session establishment failed:', error);
+          }
+        }
+        
+        // Prepare headers
+        const headers: Record<string, string> = strategy.useHeaders ? {
+          'User-Agent': userAgent,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'same-origin',
+          'Sec-Fetch-User': '?1',
+          'Cache-Control': 'max-age=0',
+          'DNT': '1',
+          'Referer': homepageUrl,
+        } : {};
+        
+        if (sessionCookies) {
+          headers['Cookie'] = sessionCookies;
+        }
+        
+        // Try fetching with retry logic
+        const maxRetries = 2;
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            console.log(`  Attempt ${attempt}/${maxRetries}...`);
+            
+            const response = await fetch(strategy.url, strategy.useHeaders ? { headers } : {});
+            
+            if (response.ok) {
+              html = await response.text();
+              console.log(`✓ Success with ${strategy.name}! (${html.length} bytes)`);
+              console.log('HTML snippet:', html.substring(0, 300));
+              successStrategy = strategy.name;
+              break;
+            } else {
+              console.log(`  × Attempt ${attempt} failed: ${response.status} ${response.statusText}`);
+              if (attempt === 1 && response.status === 403) {
+                console.log('  Cloudflare detected:', response.headers.get('cf-mitigated'));
+              }
+            }
+          } catch (error) {
+            console.log(`  × Attempt ${attempt} error:`, error);
+          }
+          
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+        
+        // If we got HTML, break out of strategy loop
+        if (html) break;
+        
+      } catch (error) {
+        console.log(`Strategy ${strategy.name} failed:`, error);
+      }
+      
+      // Small delay between strategies
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    // If all strategies failed
+    if (!html) {
+      throw new Error('All scraping strategies failed - Cloudflare protection is too strong');
     }
 
-    const html = await response.text();
-    console.log('Successfully fetched online players page');
-
-    // Parse character names from HTML
-    // The page typically has a table with character names
-    // We'll look for patterns like <td>CharacterName</td> or similar
+    // Step 3: Parse character names with multiple patterns
     const onlineCharacterNames = new Set<string>();
     
-    // Try multiple patterns to extract character names
-    // Pattern 1: Direct text in table cells
-    const tdPattern = /<td[^>]*>([^<]+)<\/td>/gi;
+    // Pattern 1: Links to character pages (most reliable)
+    const linkPattern = /<a[^>]*href="[^"]*[?&]name=([^"&]+)[^"]*"[^>]*>([^<]+)<\/a>/gi;
     let match;
-    while ((match = tdPattern.exec(html)) !== null) {
-      const name = match[1].trim();
-      // Filter out common non-character text (numbers, dates, etc.)
-      if (name && name.length > 2 && !/^\d+$/.test(name) && !/\d{2}:\d{2}/.test(name)) {
+    while ((match = linkPattern.exec(html)) !== null) {
+      const name = (match[1] || match[2]).trim().replace(/\+/g, ' ');
+      if (name && name.length > 2 && !/^\d+$/.test(name)) {
         onlineCharacterNames.add(name.toLowerCase());
       }
     }
-
-    // Pattern 2: Links to character pages
-    const linkPattern = /<a[^>]*href="[^"]*character[^"]*"[^>]*>([^<]+)<\/a>/gi;
-    while ((match = linkPattern.exec(html)) !== null) {
+    
+    // Pattern 2: Table cells with character names
+    const tdPattern = /<td[^>]*>([A-Z][a-zA-Z\s]{2,25})<\/td>/g;
+    while ((match = tdPattern.exec(html)) !== null) {
+      const name = match[1].trim();
+      if (name && name.length > 2 && !/^\d+$/.test(name) && !/\d{2}:\d{2}/.test(name) && 
+          !/(Level|Vocation|World|Online|Players|Status)/i.test(name)) {
+        onlineCharacterNames.add(name.toLowerCase());
+      }
+    }
+    
+    // Pattern 3: Specific Rubinot world page structure
+    const worldPattern = /<td[^>]*class="[^"]*player[^"]*"[^>]*>([^<]+)<\/td>/gi;
+    while ((match = worldPattern.exec(html)) !== null) {
       const name = match[1].trim();
       if (name && name.length > 2) {
         onlineCharacterNames.add(name.toLowerCase());
       }
     }
 
-    console.log(`Found ${onlineCharacterNames.size} online players on page`);
+    console.log(`Parsed ${onlineCharacterNames.size} unique online players from page`);
 
     // Check each hunted character against online list
     const updates = [];
