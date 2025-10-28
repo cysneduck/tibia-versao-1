@@ -482,16 +482,10 @@ export type Database = {
         Args: { p_character_id: string; p_respawn_id: string }
         Returns: Json
       }
-      cleanup_expired_priorities: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      ensure_user_data: {
-        Args: { p_user_id: string }
-        Returns: undefined
-      }
+      cleanup_expired_priorities: { Args: never; Returns: Json }
+      ensure_user_data: { Args: { p_user_id: string }; Returns: undefined }
       get_admin_user_list: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_character_id: string
           active_character_name: string
@@ -500,10 +494,7 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }
-      handle_expired_claims: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      handle_expired_claims: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -511,26 +502,14 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin_or_master: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_master_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_admin_or_master: { Args: { _user_id: string }; Returns: boolean }
+      is_master_admin: { Args: { _user_id: string }; Returns: boolean }
       join_respawn_queue: {
         Args: { p_character_id: string; p_respawn_id: string }
         Returns: Json
       }
-      leave_respawn_queue: {
-        Args: { p_respawn_id: string }
-        Returns: Json
-      }
-      release_claim: {
-        Args: { p_claim_id: string }
-        Returns: Json
-      }
+      leave_respawn_queue: { Args: { p_respawn_id: string }; Returns: Json }
+      release_claim: { Args: { p_claim_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "guild" | "neutro" | "master_admin"

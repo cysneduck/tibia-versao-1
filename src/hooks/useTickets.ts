@@ -121,11 +121,14 @@ export const useTickets = (userId: string | undefined) => {
 
     if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage
+    // Generate signed URL with 1 year expiration for ticket screenshots
+    const { data, error } = await supabase.storage
       .from('ticket-screenshots')
-      .getPublicUrl(fileName);
+      .createSignedUrl(fileName, 31536000); // 1 year in seconds
 
-    return publicUrl;
+    if (error) throw error;
+
+    return data.signedUrl;
   };
 
   return {
