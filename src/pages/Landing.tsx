@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skull, Target, MapPin, Clock, Shield, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import heroImage from "@/assets/landing-hero.png";
 import logo from "@/assets/logo.png";
 
 export default function Landing() {
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -34,8 +38,8 @@ export default function Landing() {
               Take control of your guild's hunting grounds with our advanced claim tracking and notification system. Never miss a respawn opportunity again.
             </p>
             <div className="flex gap-4">
-              <Button size="lg" className="text-lg px-8" asChild>
-                <a href="#download">Download Now</a>
+              <Button size="lg" className="text-lg px-8" onClick={() => setShowDownloadModal(true)}>
+                Download Now
               </Button>
               <Button size="lg" variant="outline" className="text-lg" asChild>
                 <Link to="/login">Try Web Version</Link>
@@ -133,13 +137,13 @@ export default function Landing() {
             Get the desktop application for the best experience with native notifications and system tray integration.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg">
+            <Button size="lg" className="text-lg" onClick={() => setShowDownloadModal(true)}>
               Download for Windows
             </Button>
-            <Button size="lg" variant="outline" className="text-lg">
+            <Button size="lg" variant="outline" className="text-lg" onClick={() => setShowDownloadModal(true)}>
               Download for macOS
             </Button>
-            <Button size="lg" variant="outline" className="text-lg">
+            <Button size="lg" variant="outline" className="text-lg" onClick={() => setShowDownloadModal(true)}>
               Download for Linux
             </Button>
           </div>
@@ -159,6 +163,27 @@ export default function Landing() {
           <p>© 2025 Claimed System. Built for the Tibia community.</p>
         </div>
       </footer>
+
+      {/* Download Under Construction Modal */}
+      <Dialog open={showDownloadModal} onOpenChange={setShowDownloadModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Desktop Version Under Construction</DialogTitle>
+            <DialogDescription>
+              The desktop application (.exe) is still under development and not ready for download yet. 
+              In the meantime, please use the web version for full access to all features.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDownloadModal(false)}>
+              Close
+            </Button>
+            <Button asChild>
+              <Link to="/login">Go to Web Version</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
