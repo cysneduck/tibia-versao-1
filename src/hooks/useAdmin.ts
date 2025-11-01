@@ -16,12 +16,15 @@ export const useAdmin = () => {
       
       if (error) throw error;
 
-      return data.map((user) => ({
+      return data.map((user: any) => ({
         id: user.id,
         email: user.email,
         role: user.role,
         active_character_id: user.active_character_id,
         activeCharacterName: user.active_character_name || 'No character',
+        guild_id: user.guild_id,
+        guild_name: user.guild_name,
+        guild_world: user.guild_world,
       }));
     },
   });
@@ -96,6 +99,32 @@ export const useAdmin = () => {
     },
   });
 
+  const assignUserToGuild = useMutation({
+    mutationFn: async ({ userId, guildId }: { userId: string; guildId: string }) => {
+      if (!isMasterAdmin) {
+        throw new Error('Only Master Admins can assign users to guilds');
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ guild_id: guildId })
+        .eq('id', userId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({ title: 'User assigned to guild successfully' });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error assigning user to guild',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   const updateSystemSetting = useMutation({
     mutationFn: async ({ key, value }: { key: string; value: string }) => {
       if (!isMasterAdmin) {
@@ -147,6 +176,7 @@ export const useAdmin = () => {
     stats,
     isLoading: usersLoading || settingsLoading,
     updateUserRole,
+    assignUserToGuild,
     updateSystemSetting,
   };
 };

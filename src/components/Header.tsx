@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { NotificationPanel } from "./NotificationPanel";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useGuild } from "@/hooks/useGuild";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
@@ -16,15 +17,18 @@ export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) 
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile } = useProfile(user?.id);
+  const { guild } = useGuild(user?.id);
   
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-primary glow-cyan tracking-wider">
-            Claimed System
+            {guild?.display_name || "Claimed System"}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Professional respawn coordination</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {guild?.subtitle || "Professional respawn coordination"}
+          </p>
         </div>
         
         <div className="flex items-center gap-4">

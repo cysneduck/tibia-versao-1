@@ -32,21 +32,23 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Users, MapPin, TrendingUp, Target, Trash2, Search, ChevronLeft, ChevronRight, TicketIcon, Clock, ArrowLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { Users, MapPin, TrendingUp, Target, Trash2, Search, ChevronLeft, ChevronRight, TicketIcon, Clock, ArrowLeft, ChevronRight as ChevronRightIcon, Building } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/hooks/useAuth";
 import { useHunteds } from "@/hooks/useHunteds";
 import { useAdminTickets } from "@/hooks/useAdminTickets";
+import { useGuilds } from "@/hooks/useGuilds";
 import { AdminTicketDialog } from "@/components/AdminTicketDialog";
 import { format } from "date-fns";
 
-type AdminSection = 'dashboard' | 'claim-duration' | 'hunteds' | 'tickets' | 'users' | 'respawns';
+type AdminSection = 'dashboard' | 'claim-duration' | 'hunteds' | 'tickets' | 'users' | 'respawns' | 'guilds';
 
 export default function Admin() {
-  const { users, settings, stats, isLoading, updateUserRole, updateSystemSetting } = useAdmin();
+  const { users, settings, stats, isLoading, updateUserRole, assignUserToGuild, updateSystemSetting } = useAdmin();
   const { isMasterAdmin } = useAuth();
   const { hunteds, addHunted, removeHunted } = useHunteds();
   const { tickets: adminTickets, stats: ticketStats } = useAdminTickets();
+  const { guilds, createGuild } = useGuilds();
 
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const [guildHours, setGuildHours] = useState(settings?.guild_claim_hours ?? "2");
@@ -69,6 +71,10 @@ export default function Admin() {
   
   const [huntedName, setHuntedName] = useState("");
   const [huntedReason, setHuntedReason] = useState("");
+  const [newGuildName, setNewGuildName] = useState('');
+  const [newGuildWorld, setNewGuildWorld] = useState('');
+  const [newGuildDisplayName, setNewGuildDisplayName] = useState('');
+  const [newGuildSubtitle, setNewGuildSubtitle] = useState('');
   
   const [userSearch, setUserSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -188,9 +194,31 @@ export default function Admin() {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-primary">{stats?.totalRespawns || 0}</p>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+
+            {isMasterAdmin && (
+              <Card 
+                className="cursor-pointer hover:border-primary transition-colors border-border bg-card/50"
+                onClick={() => setActiveSection('guilds')}
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Building className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">Guild Management</CardTitle>
+                    </div>
+                    <ChevronRightIcon className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Create and manage guilds across different worlds
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
         {/* Dashboard View - Navigation Cards */}
         {activeSection === 'dashboard' && (
@@ -694,8 +722,10 @@ export default function Admin() {
                     <TableRow>
                       <TableHead>Active Character</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Guild</TableHead>
                       <TableHead>Current Role</TableHead>
                       <TableHead>Change Role</TableHead>
+                      {isMasterAdmin && <TableHead>Assign Guild</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -706,6 +736,15 @@ export default function Admin() {
                             {user.activeCharacterName || 'No character'}
                           </TableCell>
                           <TableCell className="font-medium">{user.email}</TableCell>
+                          <TableCell>
+                            {user.guild_name && user.guild_world ? (
+                              <span className="text-sm">
+                                {user.guild_name} - {user.guild_world}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">No guild</span>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <Badge
                               variant="outline"
@@ -744,11 +783,30 @@ export default function Admin() {
                               </SelectContent>
                             </Select>
                           </TableCell>
+                          {isMasterAdmin && (
+                            <TableCell>
+                              <Select
+                                value={user.guild_id || ''}
+                                onValueChange={(guildId) => assignUserToGuild.mutate({ userId: user.id, guildId })}
+                              >
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue placeholder="Select guild" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {guilds?.map((guild) => (
+                                    <SelectItem key={guild.id} value={guild.id}>
+                                      {guild.name} - {guild.world}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={isMasterAdmin ? 6 : 5} className="text-center text-muted-foreground py-8">
                           No users found
                         </TableCell>
                       </TableRow>
@@ -811,6 +869,116 @@ export default function Admin() {
                   <p className="text-sm text-muted-foreground">
                     This feature will allow you to toggle visibility of respawns
                   </p>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {/* Guild Management Section - Master Admin Only */}
+        {activeSection === 'guilds' && isMasterAdmin && (
+          <>
+            {renderBackButton()}
+            <Card className="border-border bg-card/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Guild Management
+                </CardTitle>
+                <CardDescription>
+                  Create and manage guilds across different worlds
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Create New Guild Form */}
+                <div className="border border-border rounded-lg p-4 space-y-4">
+                  <h3 className="text-lg font-semibold">Create New Guild</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="guild-name">Guild Name</Label>
+                      <Input
+                        id="guild-name"
+                        placeholder="e.g., Genesis"
+                        value={newGuildName}
+                        onChange={(e) => setNewGuildName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="guild-world">World</Label>
+                      <Input
+                        id="guild-world"
+                        placeholder="e.g., Mystian"
+                        value={newGuildWorld}
+                        onChange={(e) => setNewGuildWorld(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="guild-display-name">Display Name</Label>
+                    <Input
+                      id="guild-display-name"
+                      placeholder="e.g., Genesis Claimed System"
+                      value={newGuildDisplayName}
+                      onChange={(e) => setNewGuildDisplayName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="guild-subtitle">Subtitle (Optional)</Label>
+                    <Input
+                      id="guild-subtitle"
+                      placeholder="e.g., Professional respawn coordination - Mystian"
+                      value={newGuildSubtitle}
+                      onChange={(e) => setNewGuildSubtitle(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      if (!newGuildName || !newGuildWorld || !newGuildDisplayName) {
+                        return;
+                      }
+                      createGuild.mutate({
+                        name: newGuildName,
+                        world: newGuildWorld,
+                        display_name: newGuildDisplayName,
+                        subtitle: newGuildSubtitle || undefined,
+                      });
+                      setNewGuildName('');
+                      setNewGuildWorld('');
+                      setNewGuildDisplayName('');
+                      setNewGuildSubtitle('');
+                    }}
+                    className="w-full"
+                    disabled={!newGuildName || !newGuildWorld || !newGuildDisplayName}
+                  >
+                    Create Guild
+                  </Button>
+                </div>
+
+                {/* Existing Guilds List */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Existing Guilds</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>World</TableHead>
+                        <TableHead>Display Name</TableHead>
+                        <TableHead>Subtitle</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {guilds?.map((guild: any) => (
+                        <TableRow key={guild.id}>
+                          <TableCell className="font-medium">{guild.name}</TableCell>
+                          <TableCell>{guild.world}</TableCell>
+                          <TableCell>{guild.display_name}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {guild.subtitle || 'N/A'}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>
             </Card>
