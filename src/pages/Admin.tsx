@@ -42,16 +42,12 @@ import { useGuilds } from "@/hooks/useGuilds";
 import { AdminTicketDialog } from "@/components/AdminTicketDialog";
 import { format } from "date-fns";
 
-type AdminSection = 'dashboard' | 'claim-duration' | 'hunteds' | 'tickets' | 'master' | 'respawns';
-
 export default function Admin() {
   const { users, settings, stats, isLoading, updateUserRole, assignUserToGuild, updateSystemSetting } = useAdmin();
   const { isMasterAdmin } = useAuth();
   const { hunteds, addHunted, removeHunted } = useHunteds();
   const { tickets: adminTickets, stats: ticketStats } = useAdminTickets();
   const { guilds, createGuild } = useGuilds();
-
-  const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const [guildHours, setGuildHours] = useState(settings?.guild_claim_hours ?? "2");
   const [guildMinutes, setGuildMinutes] = useState(settings?.guild_claim_minutes ?? "30");
   const [neutroHours, setNeutroHours] = useState(settings?.neutro_claim_hours ?? "1");
@@ -141,17 +137,6 @@ export default function Admin() {
     );
   }
 
-  const renderBackButton = () => (
-    <Button
-      variant="ghost"
-      onClick={() => setActiveSection('dashboard')}
-      className="mb-4"
-    >
-      <ArrowLeft className="h-4 w-4 mr-2" />
-      Back to Dashboard
-    </Button>
-  );
-
   return (
     <DashboardLayout isAdmin>
       <div className="space-y-6">
@@ -160,7 +145,7 @@ export default function Admin() {
           <p className="text-muted-foreground">Manage system settings and users</p>
         </div>
 
-        {/* Statistics Overview - Always visible */}
+        {/* Statistics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="border-border bg-card/50">
             <CardHeader className="pb-3">
@@ -199,101 +184,81 @@ export default function Admin() {
             </Card>
           </div>
 
-        {/* Dashboard View - Navigation Cards */}
-        {activeSection === 'dashboard' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Claim Duration Settings Card */}
-            <Card 
-              className="cursor-pointer hover:border-primary transition-colors border-border bg-card/50"
-              onClick={() => setActiveSection('claim-duration')}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Claim Duration Settings</CardTitle>
-                  </div>
-                  <ChevronRightIcon className="h-5 w-5 text-muted-foreground" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Guild: {guildHours}h {guildMinutes}m | Neutro: {neutroHours}h {neutroMinutes}m
-                </p>
-              </CardContent>
-            </Card>
+        {/* Admin Tabs */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="claim-duration">Claim Duration</TabsTrigger>
+            <TabsTrigger value="hunteds">Hunted Characters</TabsTrigger>
+            <TabsTrigger value="tickets">Support Tickets</TabsTrigger>
+            {isMasterAdmin && <TabsTrigger value="master">Master</TabsTrigger>}
+          </TabsList>
 
-            {/* Hunted Characters Card */}
-            <Card 
-              className="cursor-pointer hover:border-primary transition-colors border-border bg-card/50"
-              onClick={() => setActiveSection('hunteds')}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Hunted Characters</CardTitle>
-                  </div>
-                  <ChevronRightIcon className="h-5 w-5 text-muted-foreground" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {hunteds?.length || 0} characters on the hunted list
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Support Tickets Card */}
-            <Card 
-              className="cursor-pointer hover:border-primary transition-colors border-border bg-card/50"
-              onClick={() => setActiveSection('tickets')}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <TicketIcon className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Support Tickets</CardTitle>
-                  </div>
-                  <ChevronRightIcon className="h-5 w-5 text-muted-foreground" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {ticketStats?.open || 0} open | {ticketStats?.inProgress || 0} in progress | {ticketStats?.resolved || 0} resolved
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Master Admin Panel - Master Admin Only */}
-            {isMasterAdmin && (
-              <Card 
-                className="cursor-pointer hover:border-primary transition-colors border-border bg-card/50"
-                onClick={() => setActiveSection('master')}
-              >
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border-border bg-card/50">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-lg">Master Admin</CardTitle>
-                    </div>
-                    <ChevronRightIcon className="h-5 w-5 text-muted-foreground" />
-                  </div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-primary" />
+                    Claim Duration Settings
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Manage users, guilds, and system permissions
+                    Guild: {guildHours}h {guildMinutes}m | Neutro: {neutroHours}h {neutroMinutes}m
                   </p>
                 </CardContent>
               </Card>
-            )}
-          </div>
-        )}
 
-        {/* Claim Duration Settings Section */}
-        {activeSection === 'claim-duration' && (
-          <>
-            {renderBackButton()}
+              <Card className="border-border bg-card/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-primary" />
+                    Hunted Characters
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    {hunteds?.length || 0} characters on the hunted list
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border bg-card/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TicketIcon className="h-5 w-5 text-primary" />
+                    Support Tickets
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    {ticketStats?.open || 0} open | {ticketStats?.inProgress || 0} in progress | {ticketStats?.resolved || 0} resolved
+                  </p>
+                </CardContent>
+              </Card>
+
+              {isMasterAdmin && (
+                <Card className="border-border bg-card/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-primary" />
+                      Master Admin
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      {users?.length || 0} users | {guilds?.length || 0} guilds
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+        {/* Claim Duration Settings Tab */}
+          <TabsContent value="claim-duration">
             <Card className="border-border bg-card/50">
               <CardHeader>
                 <CardTitle>Claim Duration Settings</CardTitle>
@@ -376,13 +341,10 @@ export default function Admin() {
                 </form>
               </CardContent>
             </Card>
-          </>
-        )}
+          </TabsContent>
 
-        {/* Hunted Characters Management Section */}
-        {activeSection === 'hunteds' && (
-          <>
-            {renderBackButton()}
+          {/* Hunted Characters Tab */}
+          <TabsContent value="hunteds">
             <Card className="border-border bg-card/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -490,13 +452,10 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
-          </>
-        )}
+          </TabsContent>
 
-        {/* Ticket Management Section */}
-        {activeSection === 'tickets' && (
-          <>
-            {renderBackButton()}
+          {/* Support Tickets Tab */}
+          <TabsContent value="tickets">
             <Card className="border-border bg-card/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -642,13 +601,10 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
-          </>
-        )}
+          </TabsContent>
 
-        {/* Master Admin Section - Master Admin Only */}
-        {activeSection === 'master' && isMasterAdmin && (
-          <>
-            {renderBackButton()}
+          {/* Master Admin Tab - Master Admin Only */}
+          <TabsContent value="master">
             <Card className="border-border bg-card/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -904,8 +860,8 @@ export default function Admin() {
                 </Tabs>
               </CardContent>
             </Card>
-          </>
-        )}
+          </TabsContent>
+        </Tabs>
 
         {/* Admin Ticket Dialog */}
         <AdminTicketDialog
