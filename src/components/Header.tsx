@@ -27,7 +27,7 @@ export const Header = ({ isLoggedIn = false, username, userType }: HeaderProps) 
             {guild?.display_name || "Claimed System"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {guild?.subtitle || "Professional respawn coordination"}
+            {guild?.subtitle || "Professional Claimed System"}
           </p>
         </div>
         

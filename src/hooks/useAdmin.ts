@@ -100,7 +100,7 @@ export const useAdmin = () => {
   });
 
   const assignUserToGuild = useMutation({
-    mutationFn: async ({ userId, guildId }: { userId: string; guildId: string }) => {
+    mutationFn: async ({ userId, guildId }: { userId: string; guildId: string | null }) => {
       if (!isMasterAdmin) {
         throw new Error('Only Master Admins can assign users to guilds');
       }
@@ -114,6 +114,7 @@ export const useAdmin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['guild'] });
       toast({ title: 'User assigned to guild successfully' });
     },
     onError: (error: Error) => {
