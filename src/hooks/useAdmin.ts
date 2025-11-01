@@ -8,6 +8,16 @@ export const useAdmin = () => {
   const { toast } = useToast();
   const { isMasterAdmin, user } = useAuth();
 
+  // Get guilds for optimistic updates
+  const { data: guilds } = useQuery({
+    queryKey: ['guilds'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('guilds').select('*');
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
@@ -112,17 +122,48 @@ export const useAdmin = () => {
       
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      queryClient.invalidateQueries({ queryKey: ['guild'] });
-      toast({ title: 'User assigned to guild successfully' });
+    onMutate: async ({ userId, guildId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin-users'] });
+      
+      // Snapshot previous value
+      const previousUsers = queryClient.getQueryData(['admin-users']);
+      
+      // Optimistically update cache
+      queryClient.setQueryData(['admin-users'], (old: any[]) => {
+        if (!old) return old;
+        return old.map((u) => 
+          u.id === userId 
+            ? { 
+                ...u, 
+                guild_id: guildId,
+                guild_name: guildId ? guilds?.find(g => g.id === guildId)?.name : null,
+                guild_world: guildId ? guilds?.find(g => g.id === guildId)?.world : null 
+              }
+            : u
+        );
+      });
+      
+      return { previousUsers };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      // Rollback on error
+      if (context?.previousUsers) {
+        queryClient.setQueryData(['admin-users'], context.previousUsers);
+      }
       toast({
         title: 'Error assigning user to guild',
         description: error.message,
         variant: 'destructive',
       });
+    },
+    onSuccess: () => {
+      toast({ title: 'User assigned to guild successfully' });
+    },
+    onSettled: () => {
+      // Force refetch to ensure data is in sync
+      queryClient.refetchQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['guild'] });
     },
   });
 

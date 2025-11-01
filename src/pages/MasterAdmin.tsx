@@ -9,29 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { useQueryClient } from "@tanstack/react-query";
 
 const MasterAdmin = () => {
   const { isMasterAdmin } = useAuth();
   const { users, updateUserRole, assignUserToGuild } = useAdmin();
   const { guilds, createGuild, updateGuild } = useGuilds();
-  const queryClient = useQueryClient();
   
   const [newGuildName, setNewGuildName] = useState("");
   const [newGuildWorld, setNewGuildWorld] = useState("");
   const [newGuildDisplayName, setNewGuildDisplayName] = useState("");
   const [newGuildSubtitle, setNewGuildSubtitle] = useState("");
-
-  // Refresh users list whenever guild assignments change
-  useEffect(() => {
-    const interval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-    }, 2000);
-    
-    return () => clearInterval(interval);
-  }, [queryClient]);
 
   if (!isMasterAdmin) {
     return (
@@ -97,7 +86,7 @@ const MasterAdmin = () => {
                   </TableHeader>
                   <TableBody>
                     {users?.map((user) => (
-                      <TableRow key={user.id}>
+                      <TableRow key={`${user.id}-${user.guild_id}`}>
                         <TableCell className="font-medium">{user.email}</TableCell>
                         <TableCell>{user.activeCharacterName || '-'}</TableCell>
                         <TableCell>
@@ -135,6 +124,7 @@ const MasterAdmin = () => {
                           <Select
                             value={user.guild_id || "none"}
                             onValueChange={(value) => assignUserToGuild.mutate({ userId: user.id, guildId: value === "none" ? null : value })}
+                            disabled={assignUserToGuild.isPending}
                           >
                             <SelectTrigger className="w-48">
                               <SelectValue placeholder="Select guild" />
