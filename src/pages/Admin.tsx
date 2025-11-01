@@ -32,7 +32,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Users, MapPin, TrendingUp, Target, Trash2, Search, ChevronLeft, ChevronRight, TicketIcon, Clock, ArrowLeft, ChevronRight as ChevronRightIcon, Building } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users, MapPin, TrendingUp, Target, Trash2, Search, ChevronLeft, ChevronRight, TicketIcon, Clock, ArrowLeft, ChevronRight as ChevronRightIcon, Building, Shield } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/hooks/useAuth";
 import { useHunteds } from "@/hooks/useHunteds";
@@ -41,7 +42,7 @@ import { useGuilds } from "@/hooks/useGuilds";
 import { AdminTicketDialog } from "@/components/AdminTicketDialog";
 import { format } from "date-fns";
 
-type AdminSection = 'dashboard' | 'claim-duration' | 'hunteds' | 'tickets' | 'users' | 'respawns' | 'guilds';
+type AdminSection = 'dashboard' | 'claim-duration' | 'hunteds' | 'tickets' | 'master' | 'respawns';
 
 export default function Admin() {
   const { users, settings, stats, isLoading, updateUserRole, assignUserToGuild, updateSystemSetting } = useAdmin();
@@ -196,28 +197,6 @@ export default function Admin() {
               <p className="text-3xl font-bold text-primary">{stats?.totalRespawns || 0}</p>
               </CardContent>
             </Card>
-
-            {isMasterAdmin && (
-              <Card 
-                className="cursor-pointer hover:border-primary transition-colors border-border bg-card/50"
-                onClick={() => setActiveSection('guilds')}
-              >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Building className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-lg">Guild Management</CardTitle>
-                    </div>
-                    <ChevronRightIcon className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Create and manage guilds across different worlds
-                  </p>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
         {/* Dashboard View - Navigation Cards */}
@@ -286,45 +265,24 @@ export default function Admin() {
               </CardContent>
             </Card>
 
-            {/* User Management Card */}
-            <Card 
-              className="cursor-pointer hover:border-primary transition-colors border-border bg-card/50"
-              onClick={() => setActiveSection('users')}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">User Management</CardTitle>
-                  </div>
-                  <ChevronRightIcon className="h-5 w-5 text-muted-foreground" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Manage {users?.length || 0} total users
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Respawns Management Card - Master Admin Only */}
+            {/* Master Admin Panel - Master Admin Only */}
             {isMasterAdmin && (
               <Card 
                 className="cursor-pointer hover:border-primary transition-colors border-border bg-card/50"
-                onClick={() => setActiveSection('respawns')}
+                onClick={() => setActiveSection('master')}
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-lg">Respawns Management</CardTitle>
+                      <Shield className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">Master Admin</CardTitle>
                     </div>
                     <ChevronRightIcon className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Manage which respawns are displayed
+                    Manage users, guilds, and system permissions
                   </p>
                 </CardContent>
               </Card>
@@ -687,299 +645,263 @@ export default function Admin() {
           </>
         )}
 
-        {/* User Management Section */}
-        {activeSection === 'users' && (
-          <>
-            {renderBackButton()}
-            <Card className="border-border bg-card/50">
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>
-                  Manage user accounts and permissions
-                  {!isMasterAdmin && (
-                    <span className="block mt-1 text-blue-500">
-                      ℹ️ You can only change roles between Neutro and Guild
-                    </span>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Search Input */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by email or character name..."
-                    value={userSearch}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-
-                {/* Users Table */}
-                <div className="border rounded-lg">
-                  <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Active Character</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Guild</TableHead>
-                      <TableHead>Current Role</TableHead>
-                      <TableHead>Change Role</TableHead>
-                      {isMasterAdmin && <TableHead>Assign Guild</TableHead>}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedUsers.length > 0 ? (
-                      paginatedUsers.map((user: any) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium text-muted-foreground">
-                            {user.activeCharacterName || 'No character'}
-                          </TableCell>
-                          <TableCell className="font-medium">{user.email}</TableCell>
-                          <TableCell>
-                            {user.guild_name && user.guild_world ? (
-                              <span className="text-sm">
-                                {user.guild_name} - {user.guild_world}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">No guild</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={
-                                user.role === "master_admin"
-                                  ? "border-red-500 text-red-500"
-                                  : user.role === "admin"
-                                  ? "border-purple-500 text-purple-500"
-                                  : user.role === "guild"
-                                  ? "border-primary text-primary"
-                                  : "border-secondary text-secondary"
-                              }
-                            >
-                              {user.role === "master_admin" 
-                                ? "Master Admin" 
-                                : user.role === "admin" 
-                                ? "Admin" 
-                                : user.role === "guild" 
-                                ? "Guild" 
-                                : "Neutro"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              value={user.role}
-                              onValueChange={(value) => handleChangeUserRole(user.id, value)}
-                              disabled={user.role === "master_admin"}
-                            >
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {isMasterAdmin && <SelectItem value="admin">Admin</SelectItem>}
-                                <SelectItem value="guild">Guild</SelectItem>
-                                <SelectItem value="neutro">Neutro</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          {isMasterAdmin && (
-                            <TableCell>
-                              <Select
-                                value={user.guild_id || ''}
-                                onValueChange={(guildId) => assignUserToGuild.mutate({ userId: user.id, guildId })}
-                              >
-                                <SelectTrigger className="w-[180px]">
-                                  <SelectValue placeholder="Select guild" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {guilds?.map((guild) => (
-                                    <SelectItem key={guild.id} value={guild.id}>
-                                      {guild.name} - {guild.world}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={isMasterAdmin ? 6 : 5} className="text-center text-muted-foreground py-8">
-                          No users found
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-                </div>
-
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {startIndex + 1} to {Math.min(startIndex + usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        disabled={currentPage === 1}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <span className="text-sm font-medium">
-                        Page {currentPage} of {totalPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                        disabled={currentPage === totalPages}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </>
-        )}
-
-        {/* Respawns Management Section - Master Admin Only */}
-        {activeSection === 'respawns' && isMasterAdmin && (
+        {/* Master Admin Section - Master Admin Only */}
+        {activeSection === 'master' && isMasterAdmin && (
           <>
             {renderBackButton()}
             <Card className="border-border bg-card/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Respawns Management
+                  <Shield className="h-5 w-5" />
+                  Master Admin Panel
                 </CardTitle>
                 <CardDescription>
-                  Control which respawns are displayed in the Respawns tab
+                  Manage users, guilds, and system permissions
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground mb-4">Respawns management coming soon</p>
-                  <p className="text-sm text-muted-foreground">
-                    This feature will allow you to toggle visibility of respawns
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </>
-        )}
+                <Tabs defaultValue="users" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="users">User Management</TabsTrigger>
+                    <TabsTrigger value="guilds">Guild Management</TabsTrigger>
+                  </TabsList>
 
-        {/* Guild Management Section - Master Admin Only */}
-        {activeSection === 'guilds' && isMasterAdmin && (
-          <>
-            {renderBackButton()}
-            <Card className="border-border bg-card/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="h-5 w-5" />
-                  Guild Management
-                </CardTitle>
-                <CardDescription>
-                  Create and manage guilds across different worlds
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Create New Guild Form */}
-                <div className="border border-border rounded-lg p-4 space-y-4">
-                  <h3 className="text-lg font-semibold">Create New Guild</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="guild-name">Guild Name</Label>
+                  {/* User Management Tab */}
+                  <TabsContent value="users" className="space-y-4">
+                    {/* Search Input */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        id="guild-name"
-                        placeholder="e.g., Genesis"
-                        value={newGuildName}
-                        onChange={(e) => setNewGuildName(e.target.value)}
+                        placeholder="Search by email or character name..."
+                        value={userSearch}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        className="pl-10"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="guild-world">World</Label>
-                      <Input
-                        id="guild-world"
-                        placeholder="e.g., Mystian"
-                        value={newGuildWorld}
-                        onChange={(e) => setNewGuildWorld(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="guild-display-name">Display Name</Label>
-                    <Input
-                      id="guild-display-name"
-                      placeholder="e.g., Genesis Claimed System"
-                      value={newGuildDisplayName}
-                      onChange={(e) => setNewGuildDisplayName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="guild-subtitle">Subtitle (Optional)</Label>
-                    <Input
-                      id="guild-subtitle"
-                      placeholder="e.g., Professional respawn coordination - Mystian"
-                      value={newGuildSubtitle}
-                      onChange={(e) => setNewGuildSubtitle(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    onClick={() => {
-                      if (!newGuildName || !newGuildWorld || !newGuildDisplayName) {
-                        return;
-                      }
-                      createGuild.mutate({
-                        name: newGuildName,
-                        world: newGuildWorld,
-                        display_name: newGuildDisplayName,
-                        subtitle: newGuildSubtitle || undefined,
-                      });
-                      setNewGuildName('');
-                      setNewGuildWorld('');
-                      setNewGuildDisplayName('');
-                      setNewGuildSubtitle('');
-                    }}
-                    className="w-full"
-                    disabled={!newGuildName || !newGuildWorld || !newGuildDisplayName}
-                  >
-                    Create Guild
-                  </Button>
-                </div>
 
-                {/* Existing Guilds List */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Existing Guilds</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>World</TableHead>
-                        <TableHead>Display Name</TableHead>
-                        <TableHead>Subtitle</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {guilds?.map((guild: any) => (
-                        <TableRow key={guild.id}>
-                          <TableCell className="font-medium">{guild.name}</TableCell>
-                          <TableCell>{guild.world}</TableCell>
-                          <TableCell>{guild.display_name}</TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {guild.subtitle || 'N/A'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    {/* Users Table */}
+                    <div className="border rounded-lg">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Active Character</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Guild</TableHead>
+                            <TableHead>Current Role</TableHead>
+                            <TableHead>Change Role</TableHead>
+                            <TableHead>Assign Guild</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedUsers.length > 0 ? (
+                            paginatedUsers.map((user: any) => (
+                              <TableRow key={user.id}>
+                                <TableCell className="font-medium text-muted-foreground">
+                                  {user.activeCharacterName || 'No character'}
+                                </TableCell>
+                                <TableCell className="font-medium">{user.email}</TableCell>
+                                <TableCell>
+                                  {user.guild_name && user.guild_world ? (
+                                    <span className="text-sm">
+                                      {user.guild_name} - {user.guild_world}
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">No guild</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge
+                                    variant="outline"
+                                    className={
+                                      user.role === "master_admin"
+                                        ? "border-red-500 text-red-500"
+                                        : user.role === "admin"
+                                        ? "border-purple-500 text-purple-500"
+                                        : user.role === "guild"
+                                        ? "border-primary text-primary"
+                                        : "border-secondary text-secondary"
+                                    }
+                                  >
+                                    {user.role === "master_admin" 
+                                      ? "Master Admin" 
+                                      : user.role === "admin" 
+                                      ? "Admin" 
+                                      : user.role === "guild" 
+                                      ? "Guild" 
+                                      : "Neutro"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Select
+                                    value={user.role}
+                                    onValueChange={(value) => handleChangeUserRole(user.id, value)}
+                                    disabled={user.role === "master_admin"}
+                                  >
+                                    <SelectTrigger className="w-[140px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                      <SelectItem value="guild">Guild</SelectItem>
+                                      <SelectItem value="neutro">Neutro</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                                <TableCell>
+                                  <Select
+                                    value={user.guild_id || ''}
+                                    onValueChange={(guildId) => assignUserToGuild.mutate({ userId: user.id, guildId })}
+                                  >
+                                    <SelectTrigger className="w-[180px]">
+                                      <SelectValue placeholder="Select guild" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {guilds?.map((guild) => (
+                                        <SelectItem key={guild.id} value={guild.id}>
+                                          {guild.name} - {guild.world}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                No users found
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                          Showing {startIndex + 1} to {Math.min(startIndex + usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <span className="text-sm font-medium">
+                            Page {currentPage} of {totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Guild Management Tab */}
+                  <TabsContent value="guilds" className="space-y-6">
+                    {/* Create New Guild Form */}
+                    <div className="border border-border rounded-lg p-4 space-y-4">
+                      <h3 className="text-lg font-semibold">Create New Guild</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="guild-name">Guild Name</Label>
+                          <Input
+                            id="guild-name"
+                            placeholder="e.g., Genesis"
+                            value={newGuildName}
+                            onChange={(e) => setNewGuildName(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="guild-world">World</Label>
+                          <Input
+                            id="guild-world"
+                            placeholder="e.g., Mystian"
+                            value={newGuildWorld}
+                            onChange={(e) => setNewGuildWorld(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="guild-display-name">Display Name</Label>
+                        <Input
+                          id="guild-display-name"
+                          placeholder="e.g., Genesis Claimed System"
+                          value={newGuildDisplayName}
+                          onChange={(e) => setNewGuildDisplayName(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="guild-subtitle">Subtitle (Optional)</Label>
+                        <Input
+                          id="guild-subtitle"
+                          placeholder="e.g., Professional respawn coordination - Mystian"
+                          value={newGuildSubtitle}
+                          onChange={(e) => setNewGuildSubtitle(e.target.value)}
+                        />
+                      </div>
+                      <Button
+                        onClick={() => {
+                          if (!newGuildName || !newGuildWorld || !newGuildDisplayName) {
+                            return;
+                          }
+                          createGuild.mutate({
+                            name: newGuildName,
+                            world: newGuildWorld,
+                            display_name: newGuildDisplayName,
+                            subtitle: newGuildSubtitle || undefined,
+                          });
+                          setNewGuildName('');
+                          setNewGuildWorld('');
+                          setNewGuildDisplayName('');
+                          setNewGuildSubtitle('');
+                        }}
+                        className="w-full"
+                        disabled={!newGuildName || !newGuildWorld || !newGuildDisplayName}
+                      >
+                        Create Guild
+                      </Button>
+                    </div>
+
+                    {/* Existing Guilds List */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Existing Guilds</h3>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>World</TableHead>
+                            <TableHead>Display Name</TableHead>
+                            <TableHead>Subtitle</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {guilds?.map((guild: any) => (
+                            <TableRow key={guild.id}>
+                              <TableCell className="font-medium">{guild.name}</TableCell>
+                              <TableCell>{guild.world}</TableCell>
+                              <TableCell>{guild.display_name}</TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {guild.subtitle || 'N/A'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </>
