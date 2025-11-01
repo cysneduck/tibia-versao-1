@@ -77,29 +77,29 @@ const MasterAdmin = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Email</TableHead>
-                      <TableHead>Current Role</TableHead>
-                      <TableHead>Guild</TableHead>
                       <TableHead>Active Character</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>Current Role</TableHead>
+                      <TableHead>Change Role</TableHead>
+                      <TableHead>Current Guild</TableHead>
+                      <TableHead>Assign Guild</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {users?.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.email}</TableCell>
+                        <TableCell>{user.activeCharacterName || '-'}</TableCell>
                         <TableCell>
                           <Badge variant={user.role === 'master_admin' ? 'default' : 'secondary'}>
                             {user.role}
                           </Badge>
                         </TableCell>
-                        <TableCell>{user.guild_name || 'No guild'}</TableCell>
-                        <TableCell>{user.activeCharacterName || '-'}</TableCell>
-                        <TableCell className="space-x-2">
+                        <TableCell>
                           <Select
                             value={user.role}
                             onValueChange={(value) => updateUserRole.mutate({ userId: user.id, newRole: value as any })}
                           >
-                            <SelectTrigger className="w-32">
+                            <SelectTrigger className="w-36">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -109,12 +109,24 @@ const MasterAdmin = () => {
                               <SelectItem value="master_admin">Master Admin</SelectItem>
                             </SelectContent>
                           </Select>
+                        </TableCell>
+                        <TableCell>
+                          {user.guild_name ? (
+                            <span className="text-sm">
+                              {user.guild_name}
+                              <span className="text-muted-foreground ml-1">({user.guild_world})</span>
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">No guild</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           <Select
                             value={user.guild_id || "none"}
                             onValueChange={(value) => assignUserToGuild.mutate({ userId: user.id, guildId: value === "none" ? null : value })}
                           >
-                            <SelectTrigger className="w-40">
-                              <SelectValue placeholder="Assign guild" />
+                            <SelectTrigger className="w-48">
+                              <SelectValue placeholder="Select guild" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">No guild</SelectItem>

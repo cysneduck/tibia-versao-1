@@ -530,6 +530,9 @@ export type Database = {
           active_character_id: string
           active_character_name: string
           email: string
+          guild_id: string
+          guild_name: string
+          guild_world: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
         }[]
