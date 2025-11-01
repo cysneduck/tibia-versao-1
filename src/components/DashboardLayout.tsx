@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Header } from "./Header";
 import { Link, useLocation } from "react-router-dom";
-import { Home, FileSpreadsheet, Settings, User, Skull, Ticket } from "lucide-react";
+import { Home, FileSpreadsheet, Settings, User, Skull, Ticket, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -23,6 +23,7 @@ export const DashboardLayout = ({ children, isAdmin = false }: DashboardLayoutPr
     { icon: Skull, label: "Hunteds", path: "/hunteds" },
     { icon: Ticket, label: "Tickets", path: "/tickets" },
     ...((userRole === 'admin' || userRole === 'master_admin') ? [{ icon: Settings, label: "Admin", path: "/admin" }] : []),
+    ...(userRole === 'master_admin' ? [{ icon: Shield, label: "Master Admin", path: "/master-admin" }] : []),
   ];
 
   const activeCharacter = characters?.find(char => char.id === profile?.active_character_id);

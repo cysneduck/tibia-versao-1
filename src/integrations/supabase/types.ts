@@ -130,6 +130,36 @@ export type Database = {
           },
         ]
       }
+      guilds: {
+        Row: {
+          created_at: string | null
+          display_name: string
+          id: string
+          name: string
+          subtitle: string | null
+          updated_at: string | null
+          world: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_name: string
+          id?: string
+          name: string
+          subtitle?: string | null
+          updated_at?: string | null
+          world: string
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string
+          id?: string
+          name?: string
+          subtitle?: string | null
+          updated_at?: string | null
+          world?: string
+        }
+        Relationships: []
+      }
       hunted_characters: {
         Row: {
           added_by: string | null
@@ -252,6 +282,7 @@ export type Database = {
           email: string | null
           email_notifications: boolean | null
           first_login: boolean | null
+          guild_id: string | null
           id: string
           onboarding_completed: boolean | null
           password_changed: boolean | null
@@ -265,6 +296,7 @@ export type Database = {
           email?: string | null
           email_notifications?: boolean | null
           first_login?: boolean | null
+          guild_id?: string | null
           id: string
           onboarding_completed?: boolean | null
           password_changed?: boolean | null
@@ -278,6 +310,7 @@ export type Database = {
           email?: string | null
           email_notifications?: boolean | null
           first_login?: boolean | null
+          guild_id?: string | null
           id?: string
           onboarding_completed?: boolean | null
           password_changed?: boolean | null
@@ -289,6 +322,13 @@ export type Database = {
             columns: ["active_character_id"]
             isOneToOne: false
             referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
             referencedColumns: ["id"]
           },
         ]

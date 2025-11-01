@@ -14,6 +14,7 @@ import Profile from "./pages/Profile";
 import Hunteds from "./pages/Hunteds";
 import Tickets from "./pages/Tickets";
 import Admin from "./pages/Admin";
+import MasterAdmin from "./pages/MasterAdmin";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
@@ -117,6 +118,53 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const MasterAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isMasterAdmin, setIsMasterAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      
+      if (session?.user) {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        
+        const userRole = data?.role;
+        setIsMasterAdmin(userRole === 'master_admin');
+      } else {
+        setIsMasterAdmin(false);
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      checkAuth();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (isAuthenticated === null || isMasterAdmin === null) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isMasterAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -174,6 +222,14 @@ const App = () => (
               <AdminRoute>
                 <Admin />
               </AdminRoute>
+            }
+          />
+          <Route
+            path="/master-admin"
+            element={
+              <MasterAdminRoute>
+                <MasterAdmin />
+              </MasterAdminRoute>
             }
           />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
