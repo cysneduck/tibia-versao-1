@@ -110,14 +110,14 @@ const MasterAdmin = () => {
                             </SelectContent>
                           </Select>
                           <Select
-                            value={user.guild_id || ""}
-                            onValueChange={(value) => assignUserToGuild.mutate({ userId: user.id, guildId: value || null })}
+                            value={user.guild_id || "none"}
+                            onValueChange={(value) => assignUserToGuild.mutate({ userId: user.id, guildId: value === "none" ? null : value })}
                           >
                             <SelectTrigger className="w-40">
                               <SelectValue placeholder="Assign guild" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">No guild</SelectItem>
+                              <SelectItem value="none">No guild</SelectItem>
                               {guilds?.map((guild) => (
                                 <SelectItem key={guild.id} value={guild.id}>
                                   {guild.display_name}
