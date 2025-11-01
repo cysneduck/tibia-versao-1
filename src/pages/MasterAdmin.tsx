@@ -9,18 +9,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MasterAdmin = () => {
   const { isMasterAdmin } = useAuth();
   const { users, updateUserRole, assignUserToGuild } = useAdmin();
   const { guilds, createGuild, updateGuild } = useGuilds();
+  const queryClient = useQueryClient();
   
   const [newGuildName, setNewGuildName] = useState("");
   const [newGuildWorld, setNewGuildWorld] = useState("");
   const [newGuildDisplayName, setNewGuildDisplayName] = useState("");
   const [newGuildSubtitle, setNewGuildSubtitle] = useState("");
+
+  // Refresh users list whenever guild assignments change
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    }, 2000);
+    
+    return () => clearInterval(interval);
+  }, [queryClient]);
 
   if (!isMasterAdmin) {
     return (
